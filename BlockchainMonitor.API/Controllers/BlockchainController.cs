@@ -2,6 +2,7 @@ using BlockchainMonitor.Application.DTOs;
 using BlockchainMonitor.Application.Exceptions;
 using BlockchainMonitor.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace BlockchainMonitor.API.Controllers;
 
@@ -24,7 +25,10 @@ public class BlockchainController : ControllerBase
     }
 
     [HttpGet("{blockchainName}")]
-    public async Task<ActionResult<BlockchainDataDto>> GetLatestBlockchainData(string blockchainName)
+    public async Task<ActionResult<BlockchainDataDto>> GetLatestBlockchainData(
+        [Required]
+        [StringLength(20, MinimumLength = 1)]
+        string blockchainName)
     {
         var data = await _blockchainService.GetLatestBlockchainDataAsync(blockchainName);
         if (data == null)
@@ -35,8 +39,12 @@ public class BlockchainController : ControllerBase
 
     [HttpGet("{blockchainName}/history")]
     public async Task<ActionResult<IEnumerable<BlockchainDataDto>>> GetBlockchainHistory(
+        [Required]
+        [StringLength(20, MinimumLength = 1)]
         string blockchainName, 
-        [FromQuery] int limit = 100)
+        [FromQuery]
+        [Range(1, 1000)]
+        int limit = 100)
     {
         var history = await _blockchainService.GetBlockchainHistoryAsync(blockchainName, limit);
         return Ok(history);

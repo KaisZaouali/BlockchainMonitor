@@ -41,6 +41,7 @@ BlockchainMonitor/
 - ✅ **Dependency Injection** and logging
 - ✅ **Background Data Fetching** via separate console application
 - ✅ **Global Exception Handling** middleware
+- ✅ **Security Features** (Rate Limiting, CORS, Security Headers)
 
 ### Design Patterns
 - ✅ **Repository Pattern** for data access
@@ -106,6 +107,13 @@ The API provides the following endpoints:
 ### System Endpoints
 - `GET /health` - Health check endpoint
 - `GET /` - Root endpoint
+
+### Security Features
+- **Rate Limiting**: 10 requests per minute per client (429 error when exceeded)
+- **CORS Policy**: Restricted to specific origins (localhost:3000, 4200, 8080)
+- **Security Headers**: X-Content-Type-Options, X-Frame-Options, X-XSS-Protection
+- **HTTPS Redirection**: Automatic HTTP to HTTPS redirection
+- **Input Validation**: Model validation and parameter sanitization
 
 ### Example Usage
 ```bash
