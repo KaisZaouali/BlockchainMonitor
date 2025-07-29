@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlockchainMonitor.API", "BlockchainMonitor.API\BlockchainMonitor.API.csproj", "{A7CF725C-4A1B-4D63-856A-725F6BF7B689}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlockchainMonitor.Domain", "BlockchainMonitor.Domain\BlockchainMonitor.Domain.csproj", "{0C447E76-978D-4948-A268-9F68410A8ECC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlockchainMonitor.Application", "BlockchainMonitor.Application\BlockchainMonitor.Application.csproj", "{15660483-F55C-4EFF-B68E-133C9716E726}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlockchainMonitor.Infrastructure", "BlockchainMonitor.Infrastructure\BlockchainMonitor.Infrastructure.csproj", "{E80CE5F3-E2D7-426B-ABBD-C8DE3FB8D86D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A7CF725C-4A1B-4D63-856A-725F6BF7B689}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7CF725C-4A1B-4D63-856A-725F6BF7B689}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7CF725C-4A1B-4D63-856A-725F6BF7B689}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7CF725C-4A1B-4D63-856A-725F6BF7B689}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C447E76-978D-4948-A268-9F68410A8ECC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C447E76-978D-4948-A268-9F68410A8ECC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C447E76-978D-4948-A268-9F68410A8ECC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C447E76-978D-4948-A268-9F68410A8ECC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{15660483-F55C-4EFF-B68E-133C9716E726}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{15660483-F55C-4EFF-B68E-133C9716E726}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{15660483-F55C-4EFF-B68E-133C9716E726}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{15660483-F55C-4EFF-B68E-133C9716E726}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E80CE5F3-E2D7-426B-ABBD-C8DE3FB8D86D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E80CE5F3-E2D7-426B-ABBD-C8DE3FB8D86D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E80CE5F3-E2D7-426B-ABBD-C8DE3FB8D86D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E80CE5F3-E2D7-426B-ABBD-C8DE3FB8D86D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
