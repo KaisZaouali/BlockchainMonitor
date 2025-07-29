@@ -1,6 +1,8 @@
 using BlockchainMonitor.Domain.Interfaces;
 using BlockchainMonitor.Infrastructure.Data;
 using BlockchainMonitor.Infrastructure.Repositories;
+using BlockchainMonitor.Infrastructure.Services;
+using BlockchainMonitor.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +22,10 @@ public static class DependencyInjection
         
         // Register Unit of Work
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        // Register external services
+        services.AddHttpClient();
+        services.AddSingleton<IBlockCypherService, BlockCypherService>();
         
         return services;
     }

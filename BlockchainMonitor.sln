@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlockchainMonitor.Applicati
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlockchainMonitor.Infrastructure", "BlockchainMonitor.Infrastructure\BlockchainMonitor.Infrastructure.csproj", "{E80CE5F3-E2D7-426B-ABBD-C8DE3FB8D86D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlockchainMonitor.DataFetcher", "BlockchainMonitor.DataFetcher\BlockchainMonitor.DataFetcher.csproj", "{B04E775D-1008-4A37-B5CA-452B14D64F17}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{E80CE5F3-E2D7-426B-ABBD-C8DE3FB8D86D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E80CE5F3-E2D7-426B-ABBD-C8DE3FB8D86D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E80CE5F3-E2D7-426B-ABBD-C8DE3FB8D86D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B04E775D-1008-4A37-B5CA-452B14D64F17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B04E775D-1008-4A37-B5CA-452B14D64F17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B04E775D-1008-4A37-B5CA-452B14D64F17}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B04E775D-1008-4A37-B5CA-452B14D64F17}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -26,7 +26,7 @@ builder.Services.AddHealthChecks();
 // Add Application Services
 builder.Services.AddApplicationServices();
 
-// Add Infrastructure Services
+// Add Infrastructure Services (needed for database access)
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
 var app = builder.Build();
@@ -45,8 +45,6 @@ app.UseCors("AllowAll");
 
 // Add global exception handling middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-
-app.UseAuthorization();
 
 // Map controllers
 app.MapControllers();

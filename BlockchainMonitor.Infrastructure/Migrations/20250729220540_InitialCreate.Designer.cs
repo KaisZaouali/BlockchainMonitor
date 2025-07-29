@@ -11,14 +11,14 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlockchainMonitor.Infrastructure.Migrations
 {
     [DbContext(typeof(BlockchainDbContext))]
-    [Migration("20250729161044_InitialCreate")]
+    [Migration("20250729220540_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.7");
+            modelBuilder.HasAnnotation("ProductVersion", "8.0.0");
 
             modelBuilder.Entity("BlockchainMonitor.Domain.Entities.BlockchainData", b =>
                 {
@@ -27,7 +27,8 @@ namespace BlockchainMonitor.Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<long?>("BaseFee")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasAnnotation("Relational:JsonPropertyName", "base_fee");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
@@ -41,42 +42,54 @@ namespace BlockchainMonitor.Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<long?>("HighFeePerKb")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasAnnotation("Relational:JsonPropertyName", "high_fee_per_kb");
 
                     b.Property<long?>("HighGasPrice")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasAnnotation("Relational:JsonPropertyName", "high_gas_price");
 
                     b.Property<long?>("HighPriorityFee")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasAnnotation("Relational:JsonPropertyName", "high_priority_fee");
 
                     b.Property<string>("LastForkHash")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasAnnotation("Relational:JsonPropertyName", "last_fork_hash");
 
                     b.Property<long?>("LastForkHeight")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasAnnotation("Relational:JsonPropertyName", "last_fork_height");
 
                     b.Property<string>("LatestUrl")
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasAnnotation("Relational:JsonPropertyName", "latest_url");
 
                     b.Property<long?>("LowFeePerKb")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasAnnotation("Relational:JsonPropertyName", "low_fee_per_kb");
 
                     b.Property<long?>("LowGasPrice")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasAnnotation("Relational:JsonPropertyName", "low_gas_price");
 
                     b.Property<long?>("LowPriorityFee")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasAnnotation("Relational:JsonPropertyName", "low_priority_fee");
 
                     b.Property<long?>("MediumFeePerKb")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasAnnotation("Relational:JsonPropertyName", "medium_fee_per_kb");
 
                     b.Property<long?>("MediumGasPrice")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasAnnotation("Relational:JsonPropertyName", "medium_gas_price");
 
                     b.Property<long?>("MediumPriorityFee")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasAnnotation("Relational:JsonPropertyName", "medium_priority_fee");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -84,21 +97,25 @@ namespace BlockchainMonitor.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<int>("PeerCount")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("INTEGER")
+                        .HasAnnotation("Relational:JsonPropertyName", "peer_count");
 
                     b.Property<string>("PreviousHash")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasAnnotation("Relational:JsonPropertyName", "previous_hash");
 
                     b.Property<string>("PreviousUrl")
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasAnnotation("Relational:JsonPropertyName", "previous_url");
 
                     b.Property<DateTime>("Time")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("UnconfirmedCount")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("INTEGER")
+                        .HasAnnotation("Relational:JsonPropertyName", "unconfirmed_count");
 
                     b.HasKey("Id");
 
