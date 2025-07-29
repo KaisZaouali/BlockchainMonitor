@@ -58,7 +58,7 @@ BlockchainMonitor/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/BlockchainMonitor.git
+   git clone https://github.com/KaisZaouali/BlockchainMonitor.git
    cd BlockchainMonitor
    ```
 
@@ -73,8 +73,8 @@ BlockchainMonitor/
    ```
 
 4. **Access the API**
-   - API: http://localhost:5000
-   - Swagger UI: http://localhost:5000/swagger
+   - API: http://localhost:5065
+   - Swagger UI: http://localhost:5065/swagger
 
 ## 📚 API Documentation
 
@@ -104,7 +104,7 @@ dotnet test BlockchainMonitor.Tests.Functional
 ```bash
 # Build and run with Docker
 docker build -t blockchainmonitor .
-docker run -p 5000:5000 blockchainmonitor
+docker run -p 5065:5065 blockchainmonitor
 
 # Using docker-compose
 docker-compose up -d
@@ -138,12 +138,16 @@ BlockchainMonitor/
 
 ## 🔧 Configuration
 
+### Database Location
+The SQLite database (`blockchain.db`) is stored in the **solution root directory** for easy access and management.
+
+### Application Settings
 The application uses `appsettings.json` for configuration:
 
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Data Source=blockchain.db"
+    "DefaultConnection": "Data Source=../blockchain.db"
   },
   "BlockCypherApi": {
     "BaseUrl": "https://api.blockcypher.com/v1",

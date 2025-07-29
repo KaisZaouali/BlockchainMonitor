@@ -1,5 +1,6 @@
 using BlockchainMonitor.Application;
 using BlockchainMonitor.Infrastructure;
+using BlockchainMonitor.API.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +42,9 @@ app.UseHttpsRedirection();
 
 // Use CORS
 app.UseCors("AllowAll");
+
+// Add global exception handling middleware
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseAuthorization();
 
