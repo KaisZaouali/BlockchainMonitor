@@ -23,7 +23,7 @@ builder.Services.AddRateLimiter(options =>
             factory: partition => new FixedWindowRateLimiterOptions
             {
                 AutoReplenishment = true,
-                PermitLimit = 10,
+                PermitLimit = 100,
                 Window = TimeSpan.FromMinutes(1)
             }));
     
@@ -104,3 +104,6 @@ app.MapHealthChecks("/health");
 app.MapGet("/", () => "BlockchainMonitor API is running!");
 
 app.Run();
+
+// Make Program accessible for testing
+public partial class Program { }

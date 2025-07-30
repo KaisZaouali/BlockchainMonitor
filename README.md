@@ -13,6 +13,7 @@ A comprehensive blockchain monitoring system built with .NET 8, featuring real-t
 - **Global Exception Handling**: Centralized error management
 - **Database Indexing**: Optimized queries with composite indexes
 - **Clean Architecture**: Separation of concerns across layers
+- **Comprehensive Testing**: Unit, integration, and E2E tests with high coverage
 
 ## 📋 Prerequisites
 
@@ -160,6 +161,71 @@ docker-compose -f docker/docker-compose.yml up -d
 3. **Monitoring**: Enable logging and monitoring
 4. **Backup**: Regular database backups from Docker volumes
 
+## 🧪 Testing
+
+The application includes comprehensive testing across three levels:
+
+### **Unit Tests** (`BlockchainMonitor.Tests.Unit`)
+- **Purpose**: Test individual components in isolation
+- **Coverage**: Services, repositories, business logic
+- **Tools**: xUnit, Moq, FluentAssertions
+- **Run**: `dotnet test BlockchainMonitor.Tests.Unit`
+
+### **Integration Tests** (`BlockchainMonitor.Tests.Integration`)
+- **Purpose**: Test component interactions and API endpoints
+- **Coverage**: Controllers, database operations, service integration
+- **Tools**: xUnit, Microsoft.AspNetCore.Mvc.Testing, EF Core InMemory
+- **Run**: `dotnet test BlockchainMonitor.Tests.Integration`
+
+### **End-to-End Tests** (`BlockchainMonitor.Tests.E2E`)
+- **Purpose**: Test complete user workflows and system behavior
+- **Coverage**: Full API workflows, browser interactions
+- **Tools**: xUnit, Playwright, Selenium WebDriver
+- **Run**: `dotnet test BlockchainMonitor.Tests.E2E`
+
+### **Running Tests**
+
+```bash
+# Run all tests
+dotnet test
+
+# Run specific test project
+dotnet test BlockchainMonitor.Tests.Unit
+dotnet test BlockchainMonitor.Tests.Integration
+# Docker containers for Api and Datafetcher should be already running and have collected some data
+dotnet test BlockchainMonitor.Tests.E2E
+
+# Run with coverage
+dotnet test --collect:"XPlat Code Coverage"
+
+# Run with specific filter
+dotnet test --filter "FullyQualifiedName~BlockchainData"
+```
+
+### **Test Structure**
+
+```
+Tests/
+├── Unit/
+│   ├── Services/           # Service layer tests
+│   ├── Repositories/       # Repository tests
+│   └── TestBase.cs         # Base test class
+├── Integration/
+│   ├── Controllers/        # API controller tests
+│   ├── Services/           # Integration service tests
+│   └── TestBase.cs         # Base test class
+└── E2E/
+    ├── API/               # API E2E tests
+    ├── UI/                # UI E2E tests
+    └── Workflows/         # Complete workflow tests
+```
+
+### **Test Configuration**
+
+- **Unit Tests**: Use mocking for external dependencies
+- **Integration Tests**: Use in-memory database and test containers
+- **E2E Tests**: Use real browser automation and API testing
+
 ## 🏗️ Project Structure
 
 ```
@@ -200,7 +266,14 @@ BlockchainMonitor/
 │   └── DependencyInjection.cs       # DI configuration
 └── BlockchainMonitor.DataFetcher/   # Background data fetching
     └── Program.cs                   # Console application
-```
+└── BlockchainMonitor.Tests.Unit/    # Unit tests
+    ├── Services/                    # Service layer tests
+    └── TestBase.cs                  # Base test class
+└── BlockchainMonitor.Tests.Integration/ # Integration tests
+    ├── Controllers/                 # API controller tests
+    └── TestBase.cs                  # Base test class
+└── BlockchainMonitor.Tests.E2E/    # End-to-end tests
+    └── API/                        # API E2E tests
 
 ## 🔧 Configuration
 

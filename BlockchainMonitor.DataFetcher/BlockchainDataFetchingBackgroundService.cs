@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using BlockchainMonitor.DataFetcher.Configuration;
 
 namespace BlockchainMonitor.DataFetcher.Services;
 
@@ -10,27 +11,27 @@ public class BlockchainDataFetchingBackgroundService : BackgroundService
 {
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<BlockchainDataFetchingBackgroundService> _logger;
-    private readonly BlockchainDataFetchingOptions _options;
+    private readonly DataFetchingSettings _settings;
 
     public BlockchainDataFetchingBackgroundService(
         IServiceScopeFactory serviceScopeFactory,
         ILogger<BlockchainDataFetchingBackgroundService> logger,
-        IOptions<BlockchainDataFetchingOptions> options)
+        IOptions<DataFetchingSettings> settings)
     {
         _serviceScopeFactory = serviceScopeFactory;
         _logger = logger;
-        _options = options.Value;
+        _settings = settings.Value;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        if (!_options.Enabled)
+        if (!_settings.Enabled)
         {
             _logger.LogInformation("Blockchain data fetching service is disabled");
             return;
         }
 
-        _logger.LogInformation("Blockchain data fetching service started. Interval: {IntervalSeconds} seconds", _options.IntervalSeconds);
+        _logger.LogInformation("Blockchain data fetching service started. Interval: {IntervalSeconds} seconds", _settings.IntervalSeconds);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -50,15 +51,9 @@ public class BlockchainDataFetchingBackgroundService : BackgroundService
             }
 
             // Wait for the next interval
-            await Task.Delay(TimeSpan.FromSeconds(_options.IntervalSeconds), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(_settings.IntervalSeconds), stoppingToken);
         }
 
         _logger.LogInformation("Blockchain data fetching service stopped");
     }
 }
-
-public class BlockchainDataFetchingOptions
-{
-    public bool Enabled { get; set; } = true;
-    public int IntervalSeconds { get; set; } = 30;
-} 

@@ -32,7 +32,10 @@ services:
     entrypoint: >
       sh -c "
         dotnet tool install --global dotnet-ef --version 8.0.0 &&
-        dotnet restore BlockchainMonitor.sln &&
+        dotnet restore BlockchainMonitor.Domain &&
+        dotnet restore BlockchainMonitor.Application &&
+        dotnet restore BlockchainMonitor.Infrastructure &&
+        dotnet restore BlockchainMonitor.API &&
         /root/.dotnet/tools/dotnet-ef database update --project BlockchainMonitor.API --connection 'Data Source=/app/data/blockchain.db'
       "
     networks:
