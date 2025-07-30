@@ -1,6 +1,7 @@
 using BlockchainMonitor.Application;
 using BlockchainMonitor.Infrastructure;
 using BlockchainMonitor.API.Middleware;
+using BlockchainMonitor.API.Services;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Register RabbitMQ event consumer
+builder.Services.AddHostedService<BlockchainDataCreatedConsumer>();
 
 // Add rate limiting
 builder.Services.AddRateLimiter(options =>

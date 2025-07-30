@@ -31,6 +31,9 @@ public static class DependencyInjection
         services.AddHttpClient();
         services.AddSingleton<IBlockCypherService, BlockCypherService>();
         
+        // Register event publisher
+        services.AddSingleton<IEventPublisher, RabbitMQEventPublisher>();
+        
         return services;
     }
 } 

@@ -4,6 +4,7 @@ using BlockchainMonitor.Application.Interfaces;
 using BlockchainMonitor.Application.Constants;
 using BlockchainMonitor.Application.Configuration;
 using BlockchainMonitor.Application.Mappers;
+using BlockchainMonitor.Domain.Events;
 using BlockchainMonitor.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -15,6 +16,7 @@ public class BlockchainService : IBlockchainService
     private readonly IBlockchainRepository _blockchainRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICacheService _cacheService;
+    private readonly IEventPublisher _eventPublisher;
     private readonly ILogger<BlockchainService> _logger;
     private readonly CacheSettings _cacheSettings;
 
@@ -22,12 +24,14 @@ public class BlockchainService : IBlockchainService
         IBlockchainRepository blockchainRepository,
         IUnitOfWork unitOfWork,
         ICacheService cacheService,
+        IEventPublisher eventPublisher,
         ILogger<BlockchainService> logger,
         IOptions<CacheSettings> cacheSettings)
     {
         _blockchainRepository = blockchainRepository;
         _unitOfWork = unitOfWork;
         _cacheService = cacheService;
+        _eventPublisher = eventPublisher;
         _logger = logger;
         _cacheSettings = cacheSettings.Value;
     }
@@ -154,39 +158,24 @@ public class BlockchainService : IBlockchainService
         await _blockchainRepository.AddAsync(entity);
         await _unitOfWork.SaveChangesAsync();
 
-        // Invalidate related caches
-        await InvalidateRelatedCaches(dto.Name);
+        // Publish domain event for cache invalidation
+        var @event = new BlockchainDataCreatedEvent(dto.Name);
+        _eventPublisher.Publish(@event);
+
+        _logger.LogInformation("Created blockchain data and published event for: {BlockchainName}", dto.Name);
 
         return BlockchainMapper.MapToDto(entity);
     }
 
-    public async Task<int> GetTotalRecordsAsync()
-    {
-        var cacheKey = GetTotalRecordsCacheKey();
-        
-        // Try to get from cache first
-        var cachedData = await _cacheService.GetAsync<int>(cacheKey);
-        if (cachedData != 0)
-        {
-            return cachedData;
-        }
-
-        // If not in cache, get from database
-        var total = await _blockchainRepository.GetTotalRecordsAsync();
-
-        // Cache the result using configuration
-        await _cacheService.SetAsync(cacheKey, total, TimeSpan.FromMinutes(_cacheSettings.TotalRecordsDurationMinutes));
-
-        return total;
-    }
-
-    private async Task InvalidateRelatedCaches(string blockchainName)
+    public async Task InvalidateRelatedCaches(string blockchainName)
     {
         // Remove caches that might be affected by new data
         await _cacheService.RemoveAsync(GetAllBlockchainDataCacheKey());
         await _cacheService.RemoveAsync(GetLatestDataCacheKey());
         await _cacheService.RemoveAsync(GetLatestBlockchainDataCacheKey(blockchainName));
         await _cacheService.RemoveAsync(GetBlockchainHistoryCacheKey(blockchainName));
+
+        _logger.LogDebug("Invalidated caches for blockchain: {BlockchainName}", blockchainName);
     }
 
     // Cache key generation functions
@@ -194,5 +183,4 @@ public class BlockchainService : IBlockchainService
     private static string GetLatestDataCacheKey() => "latest_data_all_blockchains";
     private static string GetLatestBlockchainDataCacheKey(string blockchainName) => $"latest_blockchain_data_{blockchainName}";
     private static string GetBlockchainHistoryCacheKey(string blockchainName) => $"blockchain_history_{blockchainName}";
-    private static string GetTotalRecordsCacheKey() => "total_records";
 } 
