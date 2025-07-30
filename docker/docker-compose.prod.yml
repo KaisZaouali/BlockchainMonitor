@@ -42,7 +42,39 @@ services:
     networks:
       - blockchainmonitor-network
 
-  # API Service
+  # API Gateway Service
+  gateway:
+    build:
+      context: ..
+      dockerfile: docker/BlockchainMonitor.Gateway/Dockerfile
+    container_name: blockchainmonitor-gateway-prod
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - blockchainmonitor-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
+
+  # API Service (Scaled)
   api:
     build:
       context: ..
@@ -50,9 +82,6 @@ services:
       args:
         TARGET_PROJECT: BlockchainMonitor.API
     container_name: blockchainmonitor-api-prod
-    ports:
-      - "80:80"
-      - "443:443"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Data Source=/app/data/blockchain-prod.db
@@ -77,6 +106,7 @@ services:
       - blockchainmonitor-network
     restart: unless-stopped
     deploy:
+      replicas: 2
       resources:
         limits:
           memory: 512M

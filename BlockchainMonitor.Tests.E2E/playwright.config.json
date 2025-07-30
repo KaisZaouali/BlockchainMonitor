@@ -15,7 +15,7 @@
     ["json", { "outputFile": "test-results/e2e-results.json" }]
   ],
   "use": {
-    "baseURL": "http://localhost:5001",
+    "baseURL": "http://localhost:5003",
     "trace": "on-first-retry",
     "screenshot": "only-on-failure",
     "video": "retain-on-failure"

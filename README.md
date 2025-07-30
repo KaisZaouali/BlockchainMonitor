@@ -6,6 +6,8 @@ A comprehensive blockchain monitoring system built with .NET 8, featuring real-t
 
 - **Multi-Blockchain Support**: Monitor Ethereum, Dash, Bitcoin, Bitcoin Testnet, and Litecoin
 - **Real-Time Data Fetching**: Background service fetches data from BlockCypher API
+- **API Gateway**: YARP-based reverse proxy with load balancing and rate limiting
+- **Scaled Architecture**: API instances scaled to 2 for high availability
 - **Intelligent Caching**: In-memory caching with configurable durations
 - **Event-Driven Architecture**: RabbitMQ-based event sourcing for cache invalidation
 - **RESTful API**: Clean, documented endpoints with Swagger
@@ -83,19 +85,22 @@ The Docker setup includes:
 
 1. **RabbitMQ**: Message broker for event-driven architecture
 2. **Migrate**: Database migration service (runs once on startup)
-3. **API**: REST API service with health checks
-4. **DataFetcher**: Background service for blockchain data fetching
+3. **API Gateway**: YARP-based reverse proxy with load balancing
+4. **API**: REST API service with health checks (scaled to 2 instances)
+5. **DataFetcher**: Background service for blockchain data fetching
 
 ### Environment Variables
 
 **Development:**
 - Database: `blockchain.db` (shared volume)
-- API Ports: `5001:80`, `5002:443`
+- Gateway Ports: `5003:80`, `5004:443`
+- API Ports: Internal only (scaled to 2 instances)
 - RabbitMQ Ports: `5672:5672`, `15672:15672`
 
 **Production:**
 - Database: `blockchain-prod.db` (shared volume)
-- API Ports: `80:80`, `443:443`
+- Gateway Ports: `80:80`, `443:443`
+- API Ports: Internal only (scaled to 2 instances)
 - RabbitMQ Ports: `5672:5672`, `15672:15672`
 
 ### Configuration
@@ -121,6 +126,7 @@ export RABBITMQ_PASS=your_rabbitmq_password
 ### Health Checks
 
 All services include health checks:
+- **Gateway**: `curl -f http://localhost:5003/health`
 - **API**: `curl -f http://localhost/health`
 - **DataFetcher**: Process monitoring
 - **RabbitMQ**: Connection ping
@@ -138,6 +144,7 @@ All services include health checks:
 docker-compose -f docker/docker-compose.yml logs
 
 # Specific service
+docker-compose -f docker/docker-compose.yml logs gateway
 docker-compose -f docker/docker-compose.yml logs api
 docker-compose -f docker/docker-compose.yml logs datafetcher
 ```
@@ -234,10 +241,14 @@ BlockchainMonitor/
 │   ├── docker-compose.yml          # Development environment
 │   ├── docker-compose.prod.yml     # Production environment
 │   ├── Dockerfile                   # Unified container definition
+│   ├── BlockchainMonitor.Gateway/  # API Gateway Dockerfile
 │   ├── start-dev.sh                # Development startup script
 │   ├── start-prod.sh               # Production startup script
-│   ├── README.md                   # Docker quick reference
-│   └── DOCKER.md                   # Comprehensive Docker documentation
+│   └── docker.md                   # Comprehensive Docker documentation
+├── BlockchainMonitor.Gateway/       # API Gateway layer
+│   ├── Controllers/                 # Gateway health endpoints
+│   ├── Middleware/                  # Gateway middleware
+│   └── Program.cs                   # Gateway configuration
 ├── BlockchainMonitor.API/           # Web API layer
 │   ├── Controllers/                 # REST API endpoints
 │   ├── Services/                    # Background services
@@ -371,7 +382,8 @@ dotnet run
 
 ### 5. Access the API
 
-- **Swagger UI**: http://localhost:5000/swagger
+- **API Gateway**: http://localhost:5003
+- **Swagger UI**: http://localhost:5003/swagger
 - **RabbitMQ Management**: http://localhost:15672
 
 ## 📡 API Endpoints

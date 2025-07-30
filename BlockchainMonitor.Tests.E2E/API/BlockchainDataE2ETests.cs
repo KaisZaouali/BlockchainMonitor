@@ -8,7 +8,7 @@ namespace BlockchainMonitor.Tests.E2E.API;
 
 public class BlockchainDataE2ETests
 {
-    private const string BaseUrl = "http://localhost:5001";
+    private const string BaseUrl = "http://localhost:5003";
     
     private static string ExtractJsonFromHtml(string content)
     {   

@@ -4,14 +4,18 @@ This document provides comprehensive instructions for running the BlockchainMoni
 
 ## 🐳 Overview
 
-The application consists of four main services:
+The application consists of five main services:
 - **RabbitMQ**: Message broker for event sourcing
 - **Migrate**: Database migration service (runs once)
-- **API**: Web API service with health checks
+- **API Gateway**: Reverse proxy with load balancing and rate limiting
+- **API**: Web API service with health checks (scaled to 2 instances)
 - **DataFetcher**: Background service for data fetching
 
-### Unified Dockerfile
-The project uses a single `Dockerfile` with build arguments to create both API and DataFetcher containers, reducing duplication and improving maintainability.
+### Architecture
+- **API Gateway**: Routes traffic to scaled API instances
+- **Load Balancing**: Round-robin distribution across API instances
+- **Rate Limiting**: 100 requests per minute per client
+- **Health Checks**: Active monitoring of all services
 
 ## 📋 Prerequisites
 
@@ -50,14 +54,15 @@ The project uses a single `Dockerfile` with build arguments to create both API a
    docker-compose -f docker/docker-compose.yml logs -f
    
    # Specific service
+   docker-compose -f docker/docker-compose.yml logs -f gateway
    docker-compose -f docker/docker-compose.yml logs -f api
    docker-compose -f docker/docker-compose.yml logs -f datafetcher
-   docker-compose -f docker/docker-compose.yml logs -f migrate
    ```
 
 5. **Access the application:**
-   - **API**: http://localhost:5001
-   - **Swagger UI**: http://localhost:5001/swagger
+   - **API Gateway**: http://localhost:5003
+   - **API (Direct)**: http://localhost:5001 (for debugging)
+   - **Swagger UI**: http://localhost:5003/swagger
    - **RabbitMQ Management**: http://localhost:15672 (guest/guest)
 
 ### Production Environment
@@ -78,18 +83,18 @@ The project uses a single `Dockerfile` with build arguments to create both API a
    ```
 
 3. **Access the application:**
-   - **API**: http://localhost:80
+   - **API Gateway**: http://localhost:80
    - **RabbitMQ Management**: http://localhost:15672
 
-## ��️ Architecture
+## 🏗️ Architecture
 
 ### Stack Names
 - **Development**: `BlockchainMonitor`
 - **Production**: `BlockchainMonitor-prod`
 
 ### Container Naming
-- **Development**: `BlockchainMonitor-{service}` (e.g., `BlockchainMonitor-api`)
-- **Production**: `BlockchainMonitor-prod-{service}` (e.g., `BlockchainMonitor-prod-api`)
+- **Development**: `BlockchainMonitor-{service}` (e.g., `BlockchainMonitor-gateway`)
+- **Production**: `BlockchainMonitor-prod-{service}` (e.g., `BlockchainMonitor-prod-gateway`)
 
 ### Service Dependencies
 
@@ -98,7 +103,9 @@ RabbitMQ (5672, 15672)
     ↓
 Migrate (runs once)
     ↓
-API (5001, 5002) & DataFetcher
+API (scaled to 2 instances)
+    ↓
+Gateway (5000) → Load Balancer → API instances
 ```
 
 ### Network Configuration
@@ -106,7 +113,7 @@ API (5001, 5002) & DataFetcher
 - **Development Network**: `BlockchainMonitor_blockchainmonitor-network` (bridge)
 - **Production Network**: `BlockchainMonitor-prod_blockchainmonitor-network` (bridge)
 - **Internal Communication**: Services communicate via container names
-- **External Access**: Port mappings for API and RabbitMQ Management
+- **External Access**: Port mappings for Gateway and RabbitMQ Management
 
 ### Volume Mounts
 
@@ -124,6 +131,11 @@ Both the API and DataFetcher services share the same `blockchain_data` volume, e
 ## 🔧 Configuration
 
 ### Environment Variables
+
+#### API Gateway Service
+```bash
+ASPNETCORE_ENVIRONMENT=Development
+```
 
 #### API Service
 ```bash
@@ -155,7 +167,9 @@ RABBITMQ_DEFAULT_PASS=guest
 
 | Setting | Development | Production |
 |---------|-------------|------------|
-| API Ports | 5000:80, 5001:443 | 80:80, 443:443 |
+| Gateway Ports | 5003:80, 5004:443 | 80:80, 443:443 |
+| API Ports | Internal only | Internal only |
+| API Instances | 2 replicas | 2 replicas |
 | Data Fetch Interval | 60 seconds | 300 seconds |
 | Request Delay | 1000ms | 2000ms |
 | Retry Attempts | 3 | 5 |
@@ -163,6 +177,10 @@ RABBITMQ_DEFAULT_PASS=guest
 | Resource Limits | None | 512MB RAM, 0.5 CPU |
 
 ## 🏥 Health Checks
+
+### Gateway Health Checks
+- **Endpoint**: `GET /health`
+- **Docker Health Check**: `curl -f http://localhost/health`
 
 ### API Health Checks
 - **Endpoint**: `GET /health`
@@ -183,9 +201,9 @@ RABBITMQ_DEFAULT_PASS=guest
 docker-compose -f docker/docker-compose.yml ps
 
 # Check specific service
+docker-compose -f docker/docker-compose.yml ps gateway
 docker-compose -f docker/docker-compose.yml ps api
 docker-compose -f docker/docker-compose.yml ps datafetcher
-docker-compose -f docker/docker-compose.yml ps migrate
 ```
 
 ### Logs
@@ -194,12 +212,12 @@ docker-compose -f docker/docker-compose.yml ps migrate
 docker-compose -f docker/docker-compose.yml logs -f
 
 # Specific service
+docker-compose -f docker/docker-compose.yml logs -f gateway
 docker-compose -f docker/docker-compose.yml logs -f api
 docker-compose -f docker/docker-compose.yml logs -f datafetcher
-docker-compose -f docker/docker-compose.yml logs -f migrate
 
 # Last 100 lines
-docker-compose -f docker/docker-compose.yml logs --tail=100 api
+docker-compose -f docker/docker-compose.yml logs --tail=100 gateway
 ```
 
 ### Resource Usage
@@ -208,9 +226,9 @@ docker-compose -f docker/docker-compose.yml logs --tail=100 api
 docker stats
 
 # Specific container
+docker stats BlockchainMonitor-gateway
 docker stats BlockchainMonitor-api
 docker stats BlockchainMonitor-datafetcher
-docker stats BlockchainMonitor-rabbitmq
 ```
 
 ## 🛠️ Troubleshooting
@@ -227,7 +245,21 @@ lsof -i :5000
 # Stop conflicting service or change ports in docker-compose.yml
 ```
 
-#### 2. Database Connection Issues
+#### 2. Gateway Connection Issues
+**Problem**: Gateway can't connect to API instances
+**Solution**:
+```bash
+# Check API instances are running
+docker-compose -f docker/docker-compose.yml ps api
+
+# Check gateway logs
+docker-compose -f docker/docker-compose.yml logs gateway
+
+# Test gateway health
+curl -f http://localhost:5003/health
+```
+
+#### 3. Database Connection Issues
 **Problem**: API can't connect to database
 **Solution**:
 ```bash
@@ -240,7 +272,7 @@ rm -rf ./data
 docker-compose -f docker/docker-compose.yml up -d
 ```
 
-#### 3. RabbitMQ Connection Issues
+#### 4. RabbitMQ Connection Issues
 **Problem**: Services can't connect to RabbitMQ
 **Solution**:
 ```bash
@@ -254,7 +286,7 @@ docker-compose -f docker/docker-compose.yml restart rabbitmq
 # http://localhost:15672 (guest/guest)
 ```
 
-#### 4. Memory Issues
+#### 5. Memory Issues
 **Problem**: Containers running out of memory
 **Solution**:
 ```bash
@@ -269,19 +301,20 @@ docker stats
 
 ```bash
 # Enter container shell
+docker-compose -f docker/docker-compose.yml exec gateway sh
 docker-compose -f docker/docker-compose.yml exec api sh
 docker-compose -f docker/docker-compose.yml exec datafetcher sh
 docker-compose -f docker/docker-compose.yml exec rabbitmq bash
 
 # Check container logs
-docker-compose -f docker/docker-compose.yml logs api
+docker-compose -f docker/docker-compose.yml logs gateway
 
 # Check container health
-docker inspect BlockchainMonitor-api | grep Health -A 10
+docker inspect BlockchainMonitor-gateway | grep Health -A 10
 
 # Check network connectivity
+docker-compose -f docker/docker-compose.yml exec gateway ping api
 docker-compose -f docker/docker-compose.yml exec api ping rabbitmq
-docker-compose -f docker/docker-compose.yml exec datafetcher ping rabbitmq
 ```
 
 ## 🔄 Maintenance
@@ -312,8 +345,8 @@ docker-compose build --no-cache
 docker-compose up -d
 
 # Update specific service
-docker-compose build api
-docker-compose up -d api
+docker-compose build gateway
+docker-compose up -d gateway
 ```
 
 ### Cleanup
@@ -331,14 +364,21 @@ docker system prune -a
 ## 📊 Performance Tuning
 
 ### Development Environment
-- **API**: No resource limits
+- **Gateway**: No resource limits
+- **API**: No resource limits (2 instances)
 - **DataFetcher**: No resource limits
 - **RabbitMQ**: Default settings
 
 ### Production Environment
-- **API**: 512MB RAM, 0.5 CPU
+- **Gateway**: 256MB RAM, 0.25 CPU
+- **API**: 512MB RAM, 0.5 CPU (2 instances)
 - **DataFetcher**: 256MB RAM, 0.25 CPU
 - **RabbitMQ**: Default settings
+
+### Load Balancing
+- **Algorithm**: Round-robin
+- **Health Checks**: Active monitoring
+- **Failover**: Automatic failover to healthy instances
 
 ### Optimization Tips
 1. **Use production compose file** for better performance
@@ -346,6 +386,7 @@ docker system prune -a
 3. **Adjust intervals** based on your needs
 4. **Use volume mounts** for persistent data
 5. **Enable health checks** for automatic recovery
+6. **Scale API instances** based on load
 
 ## 🔒 Security
 
@@ -355,6 +396,7 @@ docker system prune -a
 3. **Limit port exposure** to necessary ports only
 4. **Regular security updates** for base images
 5. **Monitor logs** for suspicious activity
+6. **Use API Gateway** for centralized security
 
 ### Production Security
 ```bash
@@ -408,4 +450,36 @@ docker-compose exec api cp /app/data/blockchain.db /app/data/backup.db
 
 # Clean up
 docker system prune -a
-``` 
+```
+
+## 🚀 API Gateway Features
+
+### Routing
+- **API Routes**: `/api/*` → API instances
+- **Health Routes**: `/health` → API instances
+- **Gateway Health**: `/health` → Gateway health
+
+### Load Balancing
+- **Algorithm**: Round-robin
+- **Health Checks**: Active monitoring
+- **Failover**: Automatic failover
+
+### Rate Limiting
+- **Limit**: 100 requests per minute per client
+- **Window**: 1 minute sliding window
+- **Headers**: Rate limit headers included
+
+### Monitoring
+- **Request Logging**: All requests logged with timing
+- **Error Tracking**: Detailed error logging
+- **Performance Metrics**: Response time monitoring
+
+## 📁 Files
+
+- `docker-compose.yml` - Development environment configuration
+- `docker-compose.prod.yml` - Production environment configuration
+- `Dockerfile` - Unified container definition for API and DataFetcher services
+- `BlockchainMonitor.Gateway/Dockerfile` - API Gateway container definition
+- `.dockerignore` - Files to exclude from Docker builds
+- `start-dev.sh` - Convenience script for development
+- `start-prod.sh` - Convenience script for production 
