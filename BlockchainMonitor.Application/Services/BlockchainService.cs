@@ -1,124 +1,198 @@
 using BlockchainMonitor.Application.DTOs;
 using BlockchainMonitor.Application.Exceptions;
 using BlockchainMonitor.Application.Interfaces;
-using BlockchainMonitor.Domain.Entities;
+using BlockchainMonitor.Application.Constants;
+using BlockchainMonitor.Application.Configuration;
+using BlockchainMonitor.Application.Mappers;
 using BlockchainMonitor.Domain.Interfaces;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace BlockchainMonitor.Application.Services;
 
 public class BlockchainService : IBlockchainService
 {
+    private readonly IBlockchainRepository _blockchainRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICacheService _cacheService;
+    private readonly ILogger<BlockchainService> _logger;
+    private readonly CacheSettings _cacheSettings;
 
-    public BlockchainService(IUnitOfWork unitOfWork)
+    public BlockchainService(
+        IBlockchainRepository blockchainRepository,
+        IUnitOfWork unitOfWork,
+        ICacheService cacheService,
+        ILogger<BlockchainService> logger,
+        IOptions<CacheSettings> cacheSettings)
     {
+        _blockchainRepository = blockchainRepository;
         _unitOfWork = unitOfWork;
-    }
-
-    public async Task<BlockchainDataDto?> GetLatestBlockchainDataAsync(string blockchainName)
-    {
-        var data = await _unitOfWork.BlockchainRepository.GetLatestByNameAsync(blockchainName);
-        return data != null ? MapToDto(data) : null;
+        _cacheService = cacheService;
+        _logger = logger;
+        _cacheSettings = cacheSettings.Value;
     }
 
     public async Task<IEnumerable<BlockchainDataDto>> GetAllBlockchainDataAsync()
     {
-        var data = await _unitOfWork.BlockchainRepository.GetAllAsync();
-        return data.Select(MapToDto);
+        var cacheKey = GetAllBlockchainDataCacheKey();
+        
+        // Try to get from cache first
+        var cachedData = await _cacheService.GetAsync<IEnumerable<BlockchainDataDto>>(cacheKey);
+        if (cachedData != null)
+        {
+            _logger.LogInformation("Cached data found for {CacheKey}", cacheKey);
+            return cachedData;
+        }
+
+        // If not in cache, get from database
+        var entities = await _blockchainRepository.GetAllAsync();
+        var dtos = entities.Select(BlockchainMapper.MapToDto).ToList();
+
+        // Cache the result using configuration
+        await _cacheService.SetAsync(cacheKey, dtos, TimeSpan.FromMinutes(_cacheSettings.AllBlockchainDataDurationMinutes));
+
+        return dtos;
+    }
+
+    public async Task<BlockchainDataDto?> GetLatestBlockchainDataAsync(string blockchainName)
+    {
+        // we could use history records cache key here, but it's not necessary in case users are spamming the latest blockchain data endpoint
+        var cacheKey = GetLatestBlockchainDataCacheKey(blockchainName);
+        
+        // Try to get from cache first
+        var cachedData = await _cacheService.GetAsync<BlockchainDataDto>(cacheKey);
+        if (cachedData != null)
+        {
+            _logger.LogInformation("Cached data found for {CacheKey}", cacheKey);
+            return cachedData;
+        }
+
+        // If not in cache, get from database
+        var entity = await _blockchainRepository.GetLatestByNameAsync(blockchainName);
+        if (entity == null)
+        {
+            return null;
+        }
+
+        var dto = BlockchainMapper.MapToDto(entity);
+
+        // Cache the result using configuration
+        await _cacheService.SetAsync(cacheKey, dto, TimeSpan.FromMinutes(_cacheSettings.LatestBlockchainDataDurationMinutes));
+
+        return dto;
+    }
+
+    public async Task<IEnumerable<BlockchainDataDto>> GetBlockchainHistoryAsync(string blockchainName,
+        int limit = BlockchainConstants.DefaultHistoryLimit)
+    {
+        // Always cache with max limit, but return only requested limit
+        var cacheKey = GetBlockchainHistoryCacheKey(blockchainName);
+        
+        // Try to get from cache first
+        var cachedData = await _cacheService.GetAsync<IEnumerable<BlockchainDataDto>>(cacheKey);
+        if (cachedData != null)
+        {   
+            _logger.LogInformation("Cached data found for {CacheKey}", cacheKey);
+            // Return only the requested limit from cached data
+            return cachedData.Take(limit);
+        }
+
+        // If not in cache, get from database with max limit
+        var entities = await _blockchainRepository.GetHistoryByNameAsync(blockchainName, BlockchainConstants.MaxHistoryLimit);
+        var dtos = entities.Select(BlockchainMapper.MapToDto).ToList();
+
+        // Cache the full result using configuration
+        await _cacheService.SetAsync(cacheKey, dtos, TimeSpan.FromMinutes(_cacheSettings.BlockchainHistoryDurationMinutes));
+
+        // Return only the requested limit
+        return dtos.Take(limit);
+    }
+
+    public async Task<IEnumerable<BlockchainDataDto>> GetLatestDataAsync()
+    {
+        // we could use total records cache key here, but it's not necessary in case users are spamming the latest data endpoint
+        var cacheKey = GetLatestDataCacheKey();
+        
+        // Try to get from cache first
+        var cachedData = await _cacheService.GetAsync<IEnumerable<BlockchainDataDto>>(cacheKey);
+        if (cachedData != null)
+        {
+            _logger.LogInformation("Cached data found for {CacheKey}", cacheKey);
+            return cachedData;
+        }
+
+        // If not in cache, get from database
+        var entities = await _blockchainRepository.GetLatestDataAsync();
+        var dtos = entities.Select(BlockchainMapper.MapToDto).ToList();
+
+        // Cache the result using configuration
+        await _cacheService.SetAsync(cacheKey, dtos, TimeSpan.FromMinutes(_cacheSettings.LatestDataDurationMinutes));
+
+        return dtos;
     }
 
     public async Task<BlockchainDataDto> CreateBlockchainDataAsync(BlockchainDataDto dto)
     {
         if (string.IsNullOrWhiteSpace(dto.Name))
+        {
             throw new InvalidBlockchainDataException("Blockchain name is required");
+        }
 
         if (dto.Height <= 0)
-            throw new InvalidBlockchainDataException("Block height must be greater than zero");
+        {
+            throw new InvalidBlockchainDataException("Blockchain height must be greater than 0");
+        }
 
         if (string.IsNullOrWhiteSpace(dto.Hash))
-            throw new InvalidBlockchainDataException("Block hash is required");
-
-        var entity = new BlockchainData
         {
-            Name = dto.Name,
-            Height = dto.Height,
-            Hash = dto.Hash,
-            Time = dto.Time,
-            LatestUrl = dto.LatestUrl,
-            PreviousHash = dto.PreviousHash,
-            PreviousUrl = dto.PreviousUrl,
-            PeerCount = dto.PeerCount,
-            UnconfirmedCount = dto.UnconfirmedCount,
-            HighFeePerKb = dto.HighFeePerKb,
-            MediumFeePerKb = dto.MediumFeePerKb,
-            LowFeePerKb = dto.LowFeePerKb,
-            HighGasPrice = dto.HighGasPrice,
-            MediumGasPrice = dto.MediumGasPrice,
-            LowGasPrice = dto.LowGasPrice,
-            HighPriorityFee = dto.HighPriorityFee,
-            MediumPriorityFee = dto.MediumPriorityFee,
-            LowPriorityFee = dto.LowPriorityFee,
-            BaseFee = dto.BaseFee,
-            LastForkHeight = dto.LastForkHeight,
-            LastForkHash = dto.LastForkHash
-        };
+            throw new InvalidBlockchainDataException("Blockchain hash is required");
+        }
 
-        var result = await _unitOfWork.BlockchainRepository.AddAsync(entity);
+        var entity = BlockchainMapper.MapToEntity(dto);
+        entity.CreatedAt = DateTime.UtcNow;
+
+        await _blockchainRepository.AddAsync(entity);
         await _unitOfWork.SaveChangesAsync();
-        
-        return MapToDto(result);
-    }
 
-    public async Task<IEnumerable<BlockchainDataDto>> GetBlockchainHistoryAsync(string blockchainName, int limit = 100)
-    {
-        if (string.IsNullOrWhiteSpace(blockchainName))
-            throw new InvalidBlockchainDataException("Blockchain name is required");
+        // Invalidate related caches
+        await InvalidateRelatedCaches(dto.Name);
 
-        if (limit <= 0 || limit > 1000)
-            throw new InvalidBlockchainDataException("Limit must be between 1 and 1000");
-
-        var history = await _unitOfWork.BlockchainRepository.GetHistoryByNameAsync(blockchainName, limit);
-        return history.Select(MapToDto);
-    }
-
-    public async Task<IEnumerable<BlockchainDataDto>> GetLatestDataAsync()
-    {
-        var data = await _unitOfWork.BlockchainRepository.GetLatestDataAsync();
-        return data.Select(MapToDto);
+        return BlockchainMapper.MapToDto(entity);
     }
 
     public async Task<int> GetTotalRecordsAsync()
     {
-        return await _unitOfWork.BlockchainRepository.GetTotalRecordsAsync();
+        var cacheKey = GetTotalRecordsCacheKey();
+        
+        // Try to get from cache first
+        var cachedData = await _cacheService.GetAsync<int>(cacheKey);
+        if (cachedData != 0)
+        {
+            return cachedData;
+        }
+
+        // If not in cache, get from database
+        var total = await _blockchainRepository.GetTotalRecordsAsync();
+
+        // Cache the result using configuration
+        await _cacheService.SetAsync(cacheKey, total, TimeSpan.FromMinutes(_cacheSettings.TotalRecordsDurationMinutes));
+
+        return total;
     }
 
-    private static BlockchainDataDto MapToDto(BlockchainData entity)
+    private async Task InvalidateRelatedCaches(string blockchainName)
     {
-        return new BlockchainDataDto
-        {
-            Id = entity.Id,
-            Name = entity.Name,
-            Height = entity.Height,
-            Hash = entity.Hash,
-            Time = entity.Time,
-            LatestUrl = entity.LatestUrl,
-            PreviousHash = entity.PreviousHash,
-            PreviousUrl = entity.PreviousUrl,
-            PeerCount = entity.PeerCount,
-            UnconfirmedCount = entity.UnconfirmedCount,
-            HighFeePerKb = entity.HighFeePerKb,
-            MediumFeePerKb = entity.MediumFeePerKb,
-            LowFeePerKb = entity.LowFeePerKb,
-            HighGasPrice = entity.HighGasPrice,
-            MediumGasPrice = entity.MediumGasPrice,
-            LowGasPrice = entity.LowGasPrice,
-            HighPriorityFee = entity.HighPriorityFee,
-            MediumPriorityFee = entity.MediumPriorityFee,
-            LowPriorityFee = entity.LowPriorityFee,
-            BaseFee = entity.BaseFee,
-            LastForkHeight = entity.LastForkHeight,
-            LastForkHash = entity.LastForkHash,
-            CreatedAt = entity.CreatedAt
-        };
+        // Remove caches that might be affected by new data
+        await _cacheService.RemoveAsync(GetAllBlockchainDataCacheKey());
+        await _cacheService.RemoveAsync(GetLatestDataCacheKey());
+        await _cacheService.RemoveAsync(GetLatestBlockchainDataCacheKey(blockchainName));
+        await _cacheService.RemoveAsync(GetBlockchainHistoryCacheKey(blockchainName));
     }
+
+    // Cache key generation functions
+    private static string GetAllBlockchainDataCacheKey() => "all_blockchain_data";
+    private static string GetLatestDataCacheKey() => "latest_data_all_blockchains";
+    private static string GetLatestBlockchainDataCacheKey(string blockchainName) => $"latest_blockchain_data_{blockchainName}";
+    private static string GetBlockchainHistoryCacheKey(string blockchainName) => $"blockchain_history_{blockchainName}";
+    private static string GetTotalRecordsCacheKey() => "total_records";
 } 

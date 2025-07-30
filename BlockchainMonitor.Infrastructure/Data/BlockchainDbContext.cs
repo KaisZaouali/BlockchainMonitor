@@ -50,9 +50,10 @@ public class BlockchainDbContext : DbContext
             // Historical timestamp
             entity.Property(e => e.CreatedAt).IsRequired();
 
-            // Index for faster queries
+            // Indexes for faster queries
             entity.HasIndex(e => e.Name);
             entity.HasIndex(e => e.CreatedAt);
+            entity.HasIndex(e => new { e.Name, e.CreatedAt }); // Composite index for name + time queries (most common)
         });
     }
 } 

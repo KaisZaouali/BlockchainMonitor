@@ -1,8 +1,9 @@
-using BlockchainMonitor.Application.DTOs;
 using BlockchainMonitor.Application.Interfaces;
-using BlockchainMonitor.Domain.Entities;
+using BlockchainMonitor.Application.Mappers;
 using BlockchainMonitor.Infrastructure.Interfaces;
+using BlockchainMonitor.DataFetcher.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace BlockchainMonitor.DataFetcher.Services;
 
@@ -11,94 +12,36 @@ public class DataFetchingService : IDataFetchingService
     private readonly IBlockCypherService _blockCypherService;
     private readonly IBlockchainService _blockchainService;
     private readonly ILogger<DataFetchingService> _logger;
+    private readonly DataFetchingSettings _settings;
 
     public DataFetchingService(
         IBlockCypherService blockCypherService,
         IBlockchainService blockchainService,
-        ILogger<DataFetchingService> logger)
+        ILogger<DataFetchingService> logger,
+        IOptions<DataFetchingSettings> settings)
     {
         _blockCypherService = blockCypherService;
         _blockchainService = blockchainService;
         _logger = logger;
+        _settings = settings.Value;
     }
 
     public async Task FetchAndStoreAllBlockchainDataAsync()
     {
         _logger.LogInformation("Starting to fetch and store all blockchain data");
 
-        const int delay = 1000;
-
-        // Run operations sequentially to avoid DbContext concurrency issues
+        // Execute all blockchain operations sequentially
         await FetchAndStoreEthereumDataAsync();
-        await Task.Delay(delay); // Increase delay to 5 seconds to avoid rate limiting
-        
+        await Task.Delay(_settings.RequestDelayMs);
         await FetchAndStoreDashDataAsync();
-        await Task.Delay(delay);
-        
+        await Task.Delay(_settings.RequestDelayMs);
         await FetchAndStoreBitcoinDataAsync();
-        await Task.Delay(delay);
-        
+        await Task.Delay(_settings.RequestDelayMs);
         await FetchAndStoreBitcoinTestDataAsync();
-        await Task.Delay(delay);
-        
+        await Task.Delay(_settings.RequestDelayMs);
         await FetchAndStoreLitecoinDataAsync();
 
         _logger.LogInformation("Completed fetching and storing all blockchain data");
-    }
-
-    public async Task FetchAndStoreBlockchainDataAsync(string blockchainName)
-    {
-        try
-        {
-            _logger.LogInformation("Fetching and storing data for blockchain: {BlockchainName}", blockchainName);
-
-            var blockchainData = await _blockCypherService.FetchBlockchainDataAsync(blockchainName);
-            
-            if (blockchainData != null)
-            {
-                var dto = MapToDto(blockchainData);
-                await _blockchainService.CreateBlockchainDataAsync(dto);
-                _logger.LogInformation("Successfully stored data for blockchain: {BlockchainName}", blockchainName);
-            }
-            else
-            {
-                _logger.LogWarning("Failed to fetch data for blockchain: {BlockchainName}", blockchainName);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error fetching and storing data for blockchain: {BlockchainName}", blockchainName);
-        }
-    }
-
-    private static BlockchainDataDto MapToDto(BlockchainData entity)
-    {
-        return new BlockchainDataDto
-        {
-            Id = entity.Id,
-            Name = entity.Name,
-            Height = entity.Height,
-            Hash = entity.Hash,
-            Time = entity.Time,
-            LatestUrl = entity.LatestUrl,
-            PreviousHash = entity.PreviousHash,
-            PreviousUrl = entity.PreviousUrl,
-            PeerCount = entity.PeerCount,
-            UnconfirmedCount = entity.UnconfirmedCount,
-            HighFeePerKb = entity.HighFeePerKb,
-            MediumFeePerKb = entity.MediumFeePerKb,
-            LowFeePerKb = entity.LowFeePerKb,
-            HighGasPrice = entity.HighGasPrice,
-            MediumGasPrice = entity.MediumGasPrice,
-            LowGasPrice = entity.LowGasPrice,
-            HighPriorityFee = entity.HighPriorityFee,
-            MediumPriorityFee = entity.MediumPriorityFee,
-            LowPriorityFee = entity.LowPriorityFee,
-            BaseFee = entity.BaseFee,
-            LastForkHeight = entity.LastForkHeight,
-            LastForkHash = entity.LastForkHash,
-            CreatedAt = entity.CreatedAt
-        };
     }
 
     public async Task FetchAndStoreEthereumDataAsync()
@@ -108,7 +51,7 @@ public class DataFetchingService : IDataFetchingService
             var ethereumData = await _blockCypherService.FetchEthereumDataAsync();
             if (ethereumData != null)
             {
-                var dto = MapToDto(ethereumData);
+                var dto = BlockchainMapper.MapToDto(ethereumData);
                 await _blockchainService.CreateBlockchainDataAsync(dto);
                 _logger.LogInformation("Successfully stored Ethereum data: Height {Height}", ethereumData.Height);
             }
@@ -126,7 +69,7 @@ public class DataFetchingService : IDataFetchingService
             var dashData = await _blockCypherService.FetchDashDataAsync();
             if (dashData != null)
             {
-                var dto = MapToDto(dashData);
+                var dto = BlockchainMapper.MapToDto(dashData);
                 await _blockchainService.CreateBlockchainDataAsync(dto);
                 _logger.LogInformation("Successfully stored Dash data: Height {Height}", dashData.Height);
             }
@@ -144,7 +87,7 @@ public class DataFetchingService : IDataFetchingService
             var bitcoinData = await _blockCypherService.FetchBitcoinDataAsync();
             if (bitcoinData != null)
             {
-                var dto = MapToDto(bitcoinData);
+                var dto = BlockchainMapper.MapToDto(bitcoinData);
                 await _blockchainService.CreateBlockchainDataAsync(dto);
                 _logger.LogInformation("Successfully stored Bitcoin data: Height {Height}", bitcoinData.Height);
             }
@@ -162,7 +105,7 @@ public class DataFetchingService : IDataFetchingService
             var bitcoinTestData = await _blockCypherService.FetchBitcoinTestDataAsync();
             if (bitcoinTestData != null)
             {
-                var dto = MapToDto(bitcoinTestData);
+                var dto = BlockchainMapper.MapToDto(bitcoinTestData);
                 await _blockchainService.CreateBlockchainDataAsync(dto);
                 _logger.LogInformation("Successfully stored Bitcoin Test data: Height {Height}", bitcoinTestData.Height);
             }
@@ -180,7 +123,7 @@ public class DataFetchingService : IDataFetchingService
             var litecoinData = await _blockCypherService.FetchLitecoinDataAsync();
             if (litecoinData != null)
             {
-                var dto = MapToDto(litecoinData);
+                var dto = BlockchainMapper.MapToDto(litecoinData);
                 await _blockchainService.CreateBlockchainDataAsync(dto);
                 _logger.LogInformation("Successfully stored Litecoin data: Height {Height}", litecoinData.Height);
             }

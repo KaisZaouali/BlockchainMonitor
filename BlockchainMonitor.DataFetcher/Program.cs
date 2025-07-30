@@ -2,6 +2,7 @@
 using BlockchainMonitor.Infrastructure;
 using BlockchainMonitor.Infrastructure.Interfaces;
 using BlockchainMonitor.DataFetcher.Services;
+using BlockchainMonitor.DataFetcher.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,7 +21,7 @@ builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnC
 builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
 
 // Add Application Services
-builder.Services.AddApplicationServices();
+builder.Services.AddApplicationServices(builder.Configuration);
 
 // Add Infrastructure Services
 builder.Services.AddInfrastructureServices(builder.Configuration);
@@ -29,6 +30,8 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddScoped<IDataFetchingService, DataFetchingService>();
 builder.Services.Configure<BlockchainDataFetchingOptions>(
     builder.Configuration.GetSection("BlockchainDataFetching"));
+builder.Services.Configure<DataFetchingSettings>(
+    builder.Configuration.GetSection(DataFetchingSettings.SectionName));
 
 // Add background service
 builder.Services.AddHostedService<BlockchainDataFetchingBackgroundService>();

@@ -19,7 +19,7 @@ The project follows **Clean Architecture** principles with SOLID design patterns
 BlockchainMonitor/
 ├── BlockchainMonitor.API/              # Presentation Layer (Web API)
 ├── BlockchainMonitor.DataFetcher/      # Background Service (Console App)
-├── BlockchainMonitor.Application/       # Application Layer (Use Cases)
+├── BlockchainMonitor.Application/      # Application Layer (Use Cases)
 ├── BlockchainMonitor.Domain/           # Domain Layer (Entities, Interfaces)
 └── BlockchainMonitor.Infrastructure/   # Infrastructure Layer (Repositories, External Services)
 ```
@@ -42,16 +42,24 @@ BlockchainMonitor/
 - ✅ **Background Data Fetching** via separate console application
 - ✅ **Global Exception Handling** middleware
 - ✅ **Security Features** (Rate Limiting, CORS, Security Headers)
+- ✅ **In-Memory Caching** with configurable durations
+- ✅ **Database Indexing** for performance optimization
+- ✅ **Shared Mapping Utilities** to eliminate code duplication
+- ✅ **Configurable Retry Logic** with exponential backoff
 
 ### Design Patterns
 - ✅ **Repository Pattern** for data access
 - ✅ **Unit of Work Pattern** for transaction management
 - ✅ **Background Service Pattern** for data fetching
 - ✅ **Dependency Injection** with proper service lifetimes
+- ✅ **Caching Pattern** with configurable strategies
+- ✅ **Configuration Pattern** for external settings
+- ✅ **Retry Pattern** with exponential backoff
 
 ### Technical Stack
 - **Framework**: .NET 8 Web API
 - **Database**: SQLite with Entity Framework Core
+- **Caching**: In-Memory Cache with configurable durations
 - **Testing**: xUnit, Moq, FluentAssertions
 - **Documentation**: Swagger/OpenAPI
 - **Deployment**: Docker with multi-stage builds
@@ -92,64 +100,85 @@ BlockchainMonitor/
 4. **Access the API**
    - API: http://localhost:5065
    - Swagger UI: http://localhost:5065/swagger
-   - Health Check: http://localhost:5065/health
 
-## 📚 API Documentation
+## 📋 API Documentation
 
-The API provides the following endpoints:
+### Endpoints
 
-### Blockchain Data Endpoints
-- `GET /api/blockchain` - Get all blockchain data (latest entries)
-- `GET /api/blockchain/latest` - Get latest blockchain data for all types
-- `GET /api/blockchain/{blockchainName}` - Get latest data for specific blockchain (e.g., "ETH.main", "BTC.main")
-- `GET /api/blockchain/{blockchainName}/history` - Get historical data for specific blockchain
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/blockchain` | Get all blockchain data |
+| `GET` | `/api/blockchain/{name}` | Get latest data for specific blockchain |
+| `GET` | `/api/blockchain/{name}/history?limit={limit}` | Get historical data for blockchain |
+| `GET` | `/api/blockchain/latest` | Get latest data from all blockchains |
+| `GET` | `/api/blockchain/total` | Get total number of records |
 
-### System Endpoints
-- `GET /health` - Health check endpoint
-- `GET /` - Root endpoint
+### Query Parameters
 
-### Security Features
-- **Rate Limiting**: 10 requests per minute per client (429 error when exceeded)
-- **CORS Policy**: Restricted to specific origins (localhost:3000, 4200, 8080)
-- **Security Headers**: X-Content-Type-Options, X-Frame-Options, X-XSS-Protection
-- **HTTPS Redirection**: Automatic HTTP to HTTPS redirection
-- **Input Validation**: Model validation and parameter sanitization
+- **`limit`** (optional): Number of historical records to return (1-1000, default: 100)
 
-### Example Usage
-```bash
-# Get all blockchain data
-curl http://localhost:5065/api/blockchain
+### Response Format
 
-# Get latest Ethereum data
-curl http://localhost:5065/api/blockchain/ETH.main
-
-# Get Ethereum history
-curl http://localhost:5065/api/blockchain/ETH.main/history
+```json
+{
+  "name": "ETH.main",
+  "height": 23025819,
+  "hash": "1b68410803c88fd872035e388f8f878ad21557663a036110ecc141de469d11e9",
+  "time": "2025-07-29T15:55:37.89831688Z",
+  "latestUrl": "https://api.blockcypher.com/v1/eth/main/blocks/...",
+  "previousHash": "00712a677a1c08d602af6c65524e2ea8f06a99f74969b62d5b06a502bd9c8bc9",
+  "previousUrl": "https://api.blockcypher.com/v1/eth/main/blocks/...",
+  "peerCount": 26,
+  "unconfirmedCount": 0,
+  "highGasPrice": 15728119101,
+  "mediumGasPrice": 11049128640,
+  "lowGasPrice": 5750945813,
+  "highPriorityFee": 1909740098,
+  "mediumPriorityFee": 1223313460,
+  "lowPriorityFee": 683834093,
+  "baseFee": 2863711524,
+  "lastForkHeight": 23020776,
+  "lastForkHash": "603730e09af9e3b33a9dff39263e7189745cdca6380ca6f7d826811649a12682",
+  "createdAt": "2025-07-29T15:55:37.89831688Z"
+}
 ```
 
-## ⚠️ Usage Limits & Rate Limiting
+### Security Features
+
+#### **Rate Limiting**
+- **API Level**: Built-in ASP.NET Core rate limiting
+- **Response**: 429 (Too Many Requests) with proper error message
+- **Configuration**: Configurable limits per endpoint
+
+#### **CORS Policy**
+- **Allowed Origins**: Specific origins only
+- **Methods**: GET, POST, PUT, DELETE
+- **Headers**: Content-Type, Authorization
+- **Credentials**: Supported
+
+#### **Security Headers**
+- **X-Content-Type-Options**: nosniff
+- **X-Frame-Options**: DENY
+- **X-XSS-Protection**: 1; mode=block
+- **Referrer-Policy**: strict-origin-when-cross-origin
+- **Permissions-Policy**: geolocation=(), microphone=()
+
+## 📊 Usage Limits & Rate Limiting
 
 ### BlockCypher API Limits
-The application integrates with BlockCypher's free API tier, which has the following limitations:
+BlockCypher provides different rate limits based on your plan:
 
-#### **Rate Limits**
-- **Free Tier**: 3 requests per second (3 req/sec)
-- **Burst Limit**: Up to 10 requests in a short burst
-- **Daily Limit**: 200 requests per day per IP address
-
-#### **Supported Blockchains**
-- ✅ **Ethereum Mainnet** (`eth/main`)
-- ✅ **Dash Mainnet** (`dash/main`)
-- ✅ **Bitcoin Mainnet** (`btc/main`)
-- ✅ **Bitcoin Testnet** (`btc/test3`)
-- ✅ **Litecoin Mainnet** (`ltc/main`)
+- **Free Tier**: 3 requests/second, 200 requests/hour
+- **Starter**: $0.10 per 1,000 requests
+- **Growth**: $0.05 per 1,000 requests
+- **Enterprise**: Custom pricing
 
 #### **Application-Level Rate Limiting**
 To respect BlockCypher's rate limits, the application implements:
 
 **DataFetcher Service:**
 - **Sequential Processing**: Fetches blockchain data one at a time
-- **Delay Between Requests**: 1-second delay between each blockchain fetch
+- **Delay Between Requests**: Configurable delay (default: 1 second)
 - **Retry Logic**: Exponential backoff for 429 (Too Many Requests) errors
   - 1st retry: 2 seconds delay
   - 2nd retry: 4 seconds delay
@@ -161,34 +190,17 @@ To respect BlockCypher's rate limits, the application implements:
 {
   "BlockchainDataFetching": {
     "Enabled": true,
-    "IntervalSeconds": 300  // 5 minutes
+    "IntervalSeconds": 60
+  },
+  "DataFetching": {
+    "RequestDelayMs": 1000
+  },
+  "RetrySettings": {
+    "MaxRetryAttempts": 3,
+    "RetryDelayMs": 2000
   }
 }
 ```
-
-#### **Error Handling**
-The application handles rate limiting gracefully:
-- **429 Errors**: Automatic retry with exponential backoff
-- **Logging**: All rate limit events are logged for monitoring
-- **Graceful Degradation**: Continues operation even if some requests fail
-
-#### **Monitoring Usage**
-To monitor your API usage:
-1. Check the application logs for rate limit warnings
-2. Monitor the `BlockchainDataFetching` service logs
-3. Review BlockCypher's dashboard (if you have an account)
-
-#### **Best Practices**
-- **Production Use**: Consider upgrading to BlockCypher's paid tiers for higher limits
-- **Monitoring**: Set up alerts for rate limit warnings
-- **Backup Plans**: Implement fallback data sources for critical applications
-- **Caching**: The application stores historical data to reduce API calls
-
-#### **Upgrade Options**
-For higher usage limits, consider BlockCypher's paid tiers:
-- **Starter**: $0.10 per 1,000 requests
-- **Growth**: $0.05 per 1,000 requests
-- **Enterprise**: Custom pricing
 
 ## 🧪 Testing
 
@@ -229,6 +241,8 @@ BlockchainMonitor/
 │   ├── Services/                             # Data Fetching Services
 │   │   ├── DataFetchingService.cs            # Main data fetching logic
 │   │   └── BlockchainDataFetchingBackgroundService.cs  # Background service
+│   ├── Configuration/                        # Configuration Classes
+│   │   └── DataFetchingSettings.cs           # Data fetching configuration
 │   ├── Program.cs                            # Console Application Entry Point
 │   └── appsettings.json                      # DataFetcher Configuration
 ├── BlockchainMonitor.Application/            # Application Layer (Use Cases)
@@ -240,6 +254,12 @@ BlockchainMonitor/
 │   │   └── IBlockchainService.cs             # Application service contract
 │   ├── Exceptions/                           # Custom Exceptions
 │   │   └── BlockchainException.cs            # Domain-specific exceptions
+│   ├── Configuration/                        # Configuration Classes
+│   │   └── CacheSettings.cs                  # Cache configuration
+│   ├── Constants/                            # Shared Constants
+│   │   └── BlockchainConstants.cs            # Blockchain-related constants
+│   ├── Mappers/                              # Shared Mapping Utilities
+│   │   └── BlockchainMapper.cs               # Entity-DTO mapping utilities
 │   └── DependencyInjection.cs                # Application DI configuration
 ├── BlockchainMonitor.Domain/                 # Domain Layer (Entities, Interfaces)
 │   ├── Entities/                             # Domain Entities
@@ -250,19 +270,22 @@ BlockchainMonitor/
 │       └── IUnitOfWork.cs                    # Unit of Work interface
 └── BlockchainMonitor.Infrastructure/         # Infrastructure Layer (Data Access, External Services)
     ├── Data/                                 # Database Context
-    │   └── BlockchainDbContext.cs            # EF Core DbContext
+    │   └── BlockchainDbContext.cs            # EF Core DbContext with indexes
     ├── Repositories/                         # Data Access Implementation
     │   ├── Repository.cs                     # Generic repository implementation
     │   ├── BlockchainRepository.cs           # Blockchain repository implementation
     │   └── UnitOfWork.cs                     # Unit of Work implementation
     ├── Services/                             # External Services
-    │   └── BlockCypherService.cs             # BlockCypher API client
+    │   └── BlockCypherService.cs             # BlockCypher API client with retry logic
     ├── Interfaces/                           # Infrastructure Interfaces
     │   ├── IBlockCypherService.cs            # BlockCypher service contract
     │   └── IDataFetchingService.cs           # Data fetching service contract
+    ├── Configuration/                        # Configuration Classes
+    │   └── RetrySettings.cs                  # Retry configuration settings
     ├── Migrations/                           # EF Core Migrations
     │   ├── BlockchainDbContextModelSnapshot.cs
-    │   └── 20250729220540_InitialCreate.cs   # Initial database migration
+    │   ├── 20250729220540_InitialCreate.cs   # Initial database migration
+    │   └── 20250729232313_AddCompositeIndexForNameAndCreatedAt.cs  # Performance indexes
     └── DependencyInjection.cs                # Infrastructure DI configuration
 ```
 
@@ -296,7 +319,19 @@ This ensures proper deserialization of all BlockCypher API fields including:
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Data Source=blockchain.db"
+    "DefaultConnection": "Data Source=../blockchain.db"
+  },
+  "CacheSettings": {
+    "DefaultDurationMinutes": 5,
+    "AllBlockchainDataDurationMinutes": 2,
+    "LatestBlockchainDataDurationMinutes": 1,
+    "BlockchainHistoryDurationMinutes": 5,
+    "LatestDataDurationMinutes": 2,
+    "TotalRecordsDurationMinutes": 10
+  },
+  "RetrySettings": {
+    "MaxRetryAttempts": 3,
+    "RetryDelayMs": 2000
   }
 }
 ```
@@ -308,12 +343,79 @@ This ensures proper deserialization of all BlockCypher API fields including:
     "DefaultConnection": "Data Source=blockchain.db"
   },
   "BlockCypherApi": {
-    "BaseUrl": "https://api.blockcypher.com/v1"
+    "BaseUrl": "https://api.blockcypher.com/v1",
+    "Endpoints": {
+      "Ethereum": "/eth/main",
+      "Dash": "/dash/main",
+      "Bitcoin": "/btc/main",
+      "BitcoinTest": "/btc/test3",
+      "Litecoin": "/ltc/main"
+    }
   },
   "BlockchainDataFetching": {
     "Enabled": true,
-    "IntervalSeconds": 600
+    "IntervalSeconds": 60
+  },
+  "DataFetching": {
+    "RequestDelayMs": 1000
+  },
+  "RetrySettings": {
+    "MaxRetryAttempts": 3,
+    "RetryDelayMs": 2000
   }
+}
+```
+
+### Performance Optimizations
+
+#### **Database Indexes**
+The application includes optimized database indexes for better query performance:
+
+```sql
+-- Single column indexes
+CREATE INDEX "IX_BlockchainData_Name" ON "BlockchainData" ("Name");
+CREATE INDEX "IX_BlockchainData_CreatedAt" ON "BlockchainData" ("CreatedAt");
+
+-- Composite index for common queries
+CREATE INDEX "IX_BlockchainData_Name_CreatedAt" ON "BlockchainData" ("Name", "CreatedAt");
+```
+
+#### **Caching Strategy**
+The application implements intelligent caching with configurable durations:
+
+- **All Blockchain Data**: 2 minutes (frequently accessed)
+- **Latest Blockchain Data**: 1 minute (real-time data)
+- **Blockchain History**: 5 minutes (historical data)
+- **Latest Data (All)**: 2 minutes (dashboard data)
+- **Total Records**: 10 minutes (count data)
+
+#### **Retry Strategy**
+The application implements configurable retry logic with exponential backoff:
+
+- **MaxRetryAttempts**: Configurable retry count (default: 3)
+- **RetryDelayMs**: Base delay between retries (default: 2000ms)
+- **Exponential Backoff**: Delay increases with each retry attempt
+- **429 Handling**: Special handling for rate limit errors
+
+### Shared Utilities
+
+#### **BlockchainMapper**
+Centralized mapping utilities to eliminate code duplication:
+
+```csharp
+// Shared mapping methods
+BlockchainMapper.MapToDto(entity)    // Entity → DTO
+BlockchainMapper.MapToEntity(dto)    // DTO → Entity
+```
+
+#### **BlockchainConstants**
+Shared constants for consistent behavior:
+
+```csharp
+public static class BlockchainConstants
+{
+    public const int MaxHistoryLimit = 1000;
+    public const int DefaultHistoryLimit = 100;
 }
 ```
 
@@ -347,13 +449,21 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ JSON property mapping for BlockCypher API
 - ✅ SQLite database with EF Core
 - ✅ Dependency injection with proper service lifetimes
+- ✅ **In-Memory Caching** with configurable durations
+- ✅ **Database Indexing** for performance optimization
+- ✅ **Shared Mapping Utilities** to eliminate code duplication
+- ✅ **Configuration Management** for cache and processing settings
+- ✅ **Input Validation** with model validation attributes
+- ✅ **Security Headers** and HTTPS redirection
+- ✅ **Rate Limiting** with proper 429 error responses
+- ✅ **Configurable Retry Logic** with exponential backoff
 
 ### 🚧 Pending Features
 - ⏳ Unit, Integration, and Functional tests
 - ⏳ Docker containerization
 - ⏳ API Gateway implementation
-- ⏳ Performance optimizations
-- ⏳ Monitoring and logging enhancements
+- ⏳ Advanced monitoring and logging
+- ⏳ Performance benchmarking
 
 ---
 

@@ -3,6 +3,7 @@ using System;
 using BlockchainMonitor.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlockchainMonitor.Infrastructure.Migrations
 {
     [DbContext(typeof(BlockchainDbContext))]
-    partial class BlockchainDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250729232313_AddCompositeIndexForNameAndCreatedAt")]
+    partial class AddCompositeIndexForNameAndCreatedAt
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.0");

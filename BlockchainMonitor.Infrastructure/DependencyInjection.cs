@@ -3,6 +3,7 @@ using BlockchainMonitor.Infrastructure.Data;
 using BlockchainMonitor.Infrastructure.Repositories;
 using BlockchainMonitor.Infrastructure.Services;
 using BlockchainMonitor.Infrastructure.Interfaces;
+using BlockchainMonitor.Infrastructure.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +17,9 @@ public static class DependencyInjection
         // Add Entity Framework
         services.AddDbContext<BlockchainDbContext>(options =>
             options.UseSqlite(configuration.GetConnectionString("DefaultConnection")));
+
+        // Register configuration
+        services.Configure<RetrySettings>(configuration.GetSection(RetrySettings.SectionName));
 
         // Register repositories
         services.AddScoped<IBlockchainRepository, BlockchainRepository>();

@@ -54,7 +54,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddHealthChecks();
 
 // Add Application Services
-builder.Services.AddApplicationServices();
+builder.Services.AddApplicationServices(builder.Configuration);
 
 // Add Infrastructure Services (needed for database access)
 builder.Services.AddInfrastructureServices(builder.Configuration);

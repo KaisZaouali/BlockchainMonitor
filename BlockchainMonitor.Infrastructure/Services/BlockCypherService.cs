@@ -1,8 +1,10 @@
 using System.Text.Json;
 using BlockchainMonitor.Domain.Entities;
 using BlockchainMonitor.Infrastructure.Interfaces;
+using BlockchainMonitor.Infrastructure.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace BlockchainMonitor.Infrastructure.Services;
 
@@ -11,12 +13,18 @@ public class BlockCypherService : IBlockCypherService
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
     private readonly ILogger<BlockCypherService> _logger;
+    private readonly RetrySettings _retrySettings;
 
-    public BlockCypherService(HttpClient httpClient, IConfiguration configuration, ILogger<BlockCypherService> logger)
+    public BlockCypherService(
+        HttpClient httpClient, 
+        IConfiguration configuration, 
+        ILogger<BlockCypherService> logger,
+        IOptions<RetrySettings> retrySettings)
     {
         _httpClient = httpClient;
         _configuration = configuration;
         _logger = logger;
+        _retrySettings = retrySettings.Value;
     }
 
     public async Task<BlockchainData?> FetchEthereumDataAsync()
@@ -46,10 +54,7 @@ public class BlockCypherService : IBlockCypherService
 
     public async Task<BlockchainData?> FetchBlockchainDataAsync(string blockchainName)
     {
-        const int maxRetries = 3;
-        const int baseDelayMs = 2000;
-
-        for (int attempt = 1; attempt <= maxRetries; attempt++)
+        for (int attempt = 1; attempt <= _retrySettings.MaxRetryAttempts; attempt++)
         {
             try
             {
@@ -63,11 +68,11 @@ public class BlockCypherService : IBlockCypherService
                 
                 if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
                 {
-                    var delayMs = baseDelayMs * (int)Math.Pow(2, attempt - 1); // Exponential backoff
+                    var delayMs = _retrySettings.RetryDelayMs * (int)Math.Pow(2, attempt - 1); // Exponential backoff
                     _logger.LogWarning("Rate limited for blockchain {BlockchainName}. Attempt {Attempt}/{MaxRetries}. Waiting {DelayMs}ms", 
-                        blockchainName, attempt, maxRetries, delayMs);
+                        blockchainName, attempt, _retrySettings.MaxRetryAttempts, delayMs);
                     
-                    if (attempt < maxRetries)
+                    if (attempt < _retrySettings.MaxRetryAttempts)
                     {
                         await Task.Delay(delayMs);
                         continue;
@@ -93,17 +98,17 @@ public class BlockCypherService : IBlockCypherService
             }
             catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
             {
-                var delayMs = baseDelayMs * (int)Math.Pow(2, attempt - 1);
+                var delayMs = _retrySettings.RetryDelayMs * (int)Math.Pow(2, attempt - 1);
                 _logger.LogWarning("Rate limited for blockchain {BlockchainName}. Attempt {Attempt}/{MaxRetries}. Waiting {DelayMs}ms", 
-                    blockchainName, attempt, maxRetries, delayMs);
+                    blockchainName, attempt, _retrySettings.MaxRetryAttempts, delayMs);
                 
-                if (attempt < maxRetries)
+                if (attempt < _retrySettings.MaxRetryAttempts)
                 {
                     await Task.Delay(delayMs);
                     continue;
                 }
                 
-                _logger.LogError(ex, "HTTP request failed after {MaxRetries} attempts for blockchain {BlockchainName}", maxRetries, blockchainName);
+                _logger.LogError(ex, "HTTP request failed after {MaxRetries} attempts for blockchain {BlockchainName}", _retrySettings.MaxRetryAttempts, blockchainName);
                 return null;
             }
             catch (HttpRequestException ex)

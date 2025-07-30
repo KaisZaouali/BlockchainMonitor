@@ -1,6 +1,7 @@
 using BlockchainMonitor.Application.DTOs;
 using BlockchainMonitor.Application.Exceptions;
 using BlockchainMonitor.Application.Interfaces;
+using BlockchainMonitor.Application.Constants;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
@@ -43,8 +44,8 @@ public class BlockchainController : ControllerBase
         [StringLength(20, MinimumLength = 1)]
         string blockchainName, 
         [FromQuery]
-        [Range(1, 1000)]
-        int limit = 100)
+        [Range(1, BlockchainConstants.MaxHistoryLimit)]
+        int limit = BlockchainConstants.DefaultHistoryLimit)
     {
         var history = await _blockchainService.GetBlockchainHistoryAsync(blockchainName, limit);
         return Ok(history);
