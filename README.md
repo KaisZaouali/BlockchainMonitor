@@ -19,6 +19,7 @@ A comprehensive blockchain monitoring system built with .NET 8, featuring real-t
 - .NET 8.0 SDK
 - SQLite (included)
 - RabbitMQ Server (for event sourcing)
+- Docker & Docker Compose (for containerized deployment)
 
 ### Installing RabbitMQ
 
@@ -37,10 +38,140 @@ sudo apt-get install rabbitmq-server
 sudo systemctl start rabbitmq-server
 ```
 
+## 🐳 Docker Deployment
+
+The application is fully containerized with Docker and Docker Compose. All Docker-related files are organized in the `docker/` folder.
+
+> 📖 **For detailed Docker documentation, see [docker/DOCKER.md](docker/DOCKER.md)**
+
+### Quick Start
+
+**Development Environment:**
+```bash
+# Quick start (recommended)
+cd docker && ./start-dev.sh
+
+# Or manually:
+docker-compose -f docker/docker-compose.yml up -d
+
+# View logs
+docker-compose -f docker/docker-compose.yml logs -f
+
+# Stop services
+docker-compose -f docker/docker-compose.yml down
+```
+
+**Production Environment:**
+```bash
+# Quick start (recommended)
+cd docker && ./start-prod.sh
+
+# Or manually:
+docker-compose -f docker/docker-compose.prod.yml up -d
+
+# View logs
+docker-compose -f docker/docker-compose.prod.yml logs -f
+
+# Stop services
+docker-compose -f docker/docker-compose.prod.yml down
+```
+
+### Services Overview
+
+The Docker setup includes:
+
+1. **RabbitMQ**: Message broker for event-driven architecture
+2. **Migrate**: Database migration service (runs once on startup)
+3. **API**: REST API service with health checks
+4. **DataFetcher**: Background service for blockchain data fetching
+
+### Environment Variables
+
+**Development:**
+- Database: `blockchain.db` (shared volume)
+- API Ports: `5001:80`, `5002:443`
+- RabbitMQ Ports: `5672:5672`, `15672:15672`
+
+**Production:**
+- Database: `blockchain-prod.db` (shared volume)
+- API Ports: `80:80`, `443:443`
+- RabbitMQ Ports: `5672:5672`, `15672:15672`
+
+### Configuration
+
+**Environment Variables (docker-compose.yml):**
+```yaml
+environment:
+  - ASPNETCORE_ENVIRONMENT=Development
+  - ConnectionStrings__DefaultConnection=Data Source=/app/data/blockchain.db
+  - RABBITMQ__HOSTNAME=rabbitmq
+  - RABBITMQ__USERNAME=guest
+  - RABBITMQ__PASSWORD=guest
+  - RABBITMQ__PORT=5672
+```
+
+**Production Environment Variables:**
+```bash
+# Set these before running production
+export RABBITMQ_USER=your_rabbitmq_user
+export RABBITMQ_PASS=your_rabbitmq_password
+```
+
+### Health Checks
+
+All services include health checks:
+- **API**: `curl -f http://localhost/health`
+- **DataFetcher**: Process monitoring
+- **RabbitMQ**: Connection ping
+
+### Data Persistence
+
+- **Database**: Stored in Docker volume `blockchain_data`
+- **RabbitMQ**: Stored in Docker volume `rabbitmq_data`
+
+### Troubleshooting
+
+**View service logs:**
+```bash
+# All services
+docker-compose -f docker/docker-compose.yml logs
+
+# Specific service
+docker-compose -f docker/docker-compose.yml logs api
+docker-compose -f docker/docker-compose.yml logs datafetcher
+```
+
+**Rebuild containers:**
+```bash
+docker-compose -f docker/docker-compose.yml down
+docker-compose -f docker/docker-compose.yml up -d --build
+```
+
+**Reset database:**
+```bash
+docker-compose -f docker/docker-compose.yml down -v
+docker-compose -f docker/docker-compose.yml up -d
+```
+
+### Production Considerations
+
+1. **Security**: Change default RabbitMQ credentials
+2. **Resources**: Production compose includes resource limits
+3. **Monitoring**: Enable logging and monitoring
+4. **Backup**: Regular database backups from Docker volumes
+
 ## 🏗️ Project Structure
 
 ```
 BlockchainMonitor/
+├── docker/                          # Docker configuration
+│   ├── docker-compose.yml          # Development environment
+│   ├── docker-compose.prod.yml     # Production environment
+│   ├── Dockerfile                   # Unified container definition
+│   ├── start-dev.sh                # Development startup script
+│   ├── start-prod.sh               # Production startup script
+│   ├── README.md                   # Docker quick reference
+│   └── DOCKER.md                   # Comprehensive Docker documentation
 ├── BlockchainMonitor.API/           # Web API layer
 │   ├── Controllers/                 # REST API endpoints
 │   ├── Services/                    # Background services
@@ -102,7 +233,7 @@ BlockchainMonitor/
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Data Source=blockchain.db"
+    "DefaultConnection": "Data Source=../blockchain.db"
   },
   "BlockCypherApi": {
     "BaseUrl": "https://api.blockcypher.com/v1",
@@ -114,12 +245,10 @@ BlockchainMonitor/
       "Litecoin": "/ltc/main"
     }
   },
-  "BlockchainDataFetching": {
+  "DataFetching": {
+    "RequestDelayMs": 1000,
     "Enabled": true,
     "IntervalSeconds": 60
-  },
-  "DataFetching": {
-    "RequestDelayMs": 1000
   },
   "RetrySettings": {
     "MaxRetryAttempts": 3,
@@ -342,9 +471,6 @@ RABBITMQ__HOSTNAME=localhost
 RABBITMQ__USERNAME=guest
 RABBITMQ__PASSWORD=guest
 RABBITMQ__PORT=5672
-
-# Database Connection
-CONNECTIONSTRINGS__DEFAULTCONNECTION=Data Source=blockchain.db
 ```
 
 ### Docker Support

@@ -9,17 +9,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-// Set the base path to the project directory for configuration files
-var projectDirectory = Path.GetDirectoryName(typeof(Program).Assembly.Location);
-if (projectDirectory != null)
-{
-    builder.Configuration.SetBasePath(projectDirectory);
-}
-
-// Explicitly add JSON configuration
-builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
-
 // Add Application Services
 builder.Services.AddApplicationServices(builder.Configuration);
 
@@ -28,8 +17,6 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 
 // Add DataFetcher Services
 builder.Services.AddScoped<IDataFetchingService, DataFetchingService>();
-builder.Services.Configure<BlockchainDataFetchingOptions>(
-    builder.Configuration.GetSection("BlockchainDataFetching"));
 builder.Services.Configure<DataFetchingSettings>(
     builder.Configuration.GetSection(DataFetchingSettings.SectionName));
 

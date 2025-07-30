@@ -167,6 +167,26 @@ public class BlockchainService : IBlockchainService
         return BlockchainMapper.MapToDto(entity);
     }
 
+    public async Task<int> GetTotalRecordsAsync()
+    {
+        var cacheKey = GetTotalRecordsCacheKey();
+        
+        // Try to get from cache first
+        var cachedData = await _cacheService.GetAsync<int>(cacheKey);
+        if (cachedData != 0)
+        {
+            return cachedData;
+        }
+
+        // If not in cache, get from database
+        var total = await _blockchainRepository.GetTotalRecordsAsync();
+
+        // Cache the result using configuration
+        await _cacheService.SetAsync(cacheKey, total, TimeSpan.FromMinutes(_cacheSettings.TotalRecordsDurationMinutes));
+
+        return total;
+    }
+
     public async Task InvalidateRelatedCaches(string blockchainName)
     {
         // Remove caches that might be affected by new data
@@ -174,6 +194,7 @@ public class BlockchainService : IBlockchainService
         await _cacheService.RemoveAsync(GetLatestDataCacheKey());
         await _cacheService.RemoveAsync(GetLatestBlockchainDataCacheKey(blockchainName));
         await _cacheService.RemoveAsync(GetBlockchainHistoryCacheKey(blockchainName));
+        await _cacheService.RemoveAsync(GetTotalRecordsCacheKey());
 
         _logger.LogDebug("Invalidated caches for blockchain: {BlockchainName}", blockchainName);
     }
@@ -183,4 +204,5 @@ public class BlockchainService : IBlockchainService
     private static string GetLatestDataCacheKey() => "latest_data_all_blockchains";
     private static string GetLatestBlockchainDataCacheKey(string blockchainName) => $"latest_blockchain_data_{blockchainName}";
     private static string GetBlockchainHistoryCacheKey(string blockchainName) => $"blockchain_history_{blockchainName}";
+    private static string GetTotalRecordsCacheKey() => "total_blockchain_records";
 } 

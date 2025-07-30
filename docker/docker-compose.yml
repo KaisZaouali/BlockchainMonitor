@@ -1,0 +1,116 @@
+name: BlockchainMonitor
+
+services:
+  # RabbitMQ Server
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: blockchainmonitor-rabbitmq
+    ports:
+      - "5672:5672"   # AMQP port
+      - "15672:15672" # Management UI port
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - blockchainmonitor-network
+
+  # Database Migration Service
+  migrate:
+    image: mcr.microsoft.com/dotnet/sdk:8.0
+    container_name: blockchainmonitor-migrate
+    working_dir: /app
+    volumes:
+      - ..:/app
+      - blockchain_data:/app/data
+    entrypoint: >
+      sh -c "
+        dotnet tool install --global dotnet-ef --version 8.0.0 &&
+        dotnet restore BlockchainMonitor.sln &&
+        /root/.dotnet/tools/dotnet-ef database update --project BlockchainMonitor.API --connection 'Data Source=/app/data/blockchain.db'
+      "
+    networks:
+      - blockchainmonitor-network
+
+  # API Service
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        TARGET_PROJECT: BlockchainMonitor.API
+    container_name: blockchainmonitor-api
+    ports:
+      - "5001:80"
+      - "5002:443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Data Source=/app/data/blockchain.db
+      - RABBITMQ__HOSTNAME=rabbitmq
+      - RABBITMQ__USERNAME=guest
+      - RABBITMQ__PASSWORD=guest
+      - RABBITMQ__PORT=5672
+    volumes:
+      - blockchain_data:/app/data
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - blockchainmonitor-network
+    restart: unless-stopped
+
+  # DataFetcher Service
+  datafetcher:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        TARGET_PROJECT: BlockchainMonitor.DataFetcher
+    container_name: blockchainmonitor-datafetcher
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Data Source=/app/data/blockchain.db
+      - RABBITMQ__HOSTNAME=rabbitmq
+      - RABBITMQ__USERNAME=guest
+      - RABBITMQ__PASSWORD=guest
+      - RABBITMQ__PORT=5672
+    volumes:
+      - blockchain_data:/app/data
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "ps", "aux", "|", "grep", "BlockchainMonitor.DataFetcher"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - blockchainmonitor-network
+    restart: unless-stopped
+
+volumes:
+  rabbitmq_data:
+    driver: local
+  blockchain_data:
+    driver: local
+
+networks:
+  blockchainmonitor-network:
+    driver: bridge 
