@@ -26,7 +26,7 @@ builder.Services.AddRateLimiter(options =>
                 PermitLimit = 100,
                 Window = TimeSpan.FromMinutes(1)
             }));
-    
+
     options.RejectionStatusCode = 429; // Return 429 Too Many Requests
     options.OnRejected = async (context, token) =>
     {

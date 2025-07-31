@@ -23,7 +23,7 @@ public class RabbitMQEventPublisher : IEventPublisher, IDisposable
     public RabbitMQEventPublisher(IConfiguration configuration, ILogger<RabbitMQEventPublisher> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        
+
         var rabbitMqConfig = configuration.GetSection("RabbitMQ");
         var hostName = rabbitMqConfig["HostName"] ?? "localhost";
         var userName = rabbitMqConfig["UserName"] ?? "guest";
@@ -51,7 +51,7 @@ public class RabbitMQEventPublisher : IEventPublisher, IDisposable
         try
         {
             EnsureConnection();
-            
+
             if (_channel?.IsOpen == true)
             {
                 var eventType = typeof(TEvent).Name;
@@ -101,16 +101,16 @@ public class RabbitMQEventPublisher : IEventPublisher, IDisposable
                 // Create new connection
                 _connection = _factory.CreateConnection();
                 _channel = _connection.CreateModel();
-                
+
                 // Declare exchange
                 _channel.ExchangeDeclare(ExchangeName, ExchangeType.Fanout, durable: true);
-                
+
                 _logger.LogInformation("RabbitMQ connection established successfully");
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to connect to RabbitMQ. Will retry on next publish attempt.");
-                
+
                 // Clean up failed connection
                 _channel?.Dispose();
                 _connection?.Dispose();
@@ -131,4 +131,4 @@ public class RabbitMQEventPublisher : IEventPublisher, IDisposable
             _connection?.Dispose();
         }
     }
-} 
+}

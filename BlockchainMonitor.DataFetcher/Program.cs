@@ -1,4 +1,4 @@
-﻿using BlockchainMonitor.Application;
+using BlockchainMonitor.Application;
 using BlockchainMonitor.Infrastructure;
 using BlockchainMonitor.Infrastructure.Interfaces;
 using BlockchainMonitor.DataFetcher.Services;

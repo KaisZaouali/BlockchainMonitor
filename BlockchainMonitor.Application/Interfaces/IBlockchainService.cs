@@ -11,4 +11,4 @@ public interface IBlockchainService
     Task<BlockchainDataDto> CreateBlockchainDataAsync(BlockchainDataDto dto);
     Task<int> GetTotalRecordsAsync();
     Task InvalidateRelatedCaches(string blockchainName);
-} 
+}

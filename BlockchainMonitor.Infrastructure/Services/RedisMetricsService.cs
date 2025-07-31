@@ -108,14 +108,14 @@ public class RedisMetricsService : IMetricsService
             var db = _redis.GetDatabase();
             var server = _redis.GetServer(_redis.GetEndPoints().First());
             var keys = server.Keys(pattern: $"{_keyPrefix}*");
-            
+
             var metrics = new Dictionary<string, object>();
-            
+
             foreach (var key in keys)
             {
                 var metricName = key.ToString().Replace(_keyPrefix, "");
                 var keyType = await db.KeyTypeAsync(key);
-                
+
                 if (keyType == RedisType.String)
                 {
                     // Handle simple counter values
@@ -146,20 +146,20 @@ public class RedisMetricsService : IMetricsService
                                 numericValues.Add(numericValue);
                             }
                         }
-                        
+
                         if (numericValues.Count > 0)
                         {
                             // Calculate average for list metrics
                             var average = numericValues.Average();
                             metrics[metricName] = average;
-                            
+
                             // Also store the count of measurements
                             metrics[$"{metricName}_count"] = numericValues.Count;
                         }
                     }
                 }
             }
-            
+
             return metrics;
         }
         catch (Exception ex)
@@ -178,10 +178,10 @@ public class RedisMetricsService : IMetricsService
         {
             var db = _redis.GetDatabase();
             var key = $"{_keyPrefix}{metricName}";
-            
+
             // Increment the value
             await db.StringIncrementAsync(key);
-            
+
             // Set TTL for the key
             await db.KeyExpireAsync(key, TimeSpan.FromSeconds(_settings.RedisTtlSeconds));
         }
@@ -200,13 +200,13 @@ public class RedisMetricsService : IMetricsService
         {
             var db = _redis.GetDatabase();
             var key = $"{_keyPrefix}{metricName}";
-            
+
             // Add value to the list
             await db.ListRightPushAsync(key, value.ToString());
-            
+
             // Keep only the last N values to prevent unlimited growth
             await db.ListTrimAsync(key, -_settings.MaxListSize, -1);
-            
+
             // Set TTL for the key
             await db.KeyExpireAsync(key, TimeSpan.FromSeconds(_settings.RedisTtlSeconds));
         }
@@ -215,4 +215,4 @@ public class RedisMetricsService : IMetricsService
             _logger.LogError(ex, "Error adding metric: {MetricName}", metricName);
         }
     }
-} 
+}

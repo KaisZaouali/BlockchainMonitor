@@ -28,12 +28,12 @@ public class BlockchainDbContext : DbContext
             entity.Property(e => e.PreviousUrl).HasMaxLength(200);
             entity.Property(e => e.PeerCount).IsRequired();
             entity.Property(e => e.UnconfirmedCount).IsRequired();
-            
+
             // Fee-related fields
             entity.Property(e => e.HighFeePerKb).HasColumnType("bigint");
             entity.Property(e => e.MediumFeePerKb).HasColumnType("bigint");
             entity.Property(e => e.LowFeePerKb).HasColumnType("bigint");
-            
+
             // Gas-related fields (for Ethereum)
             entity.Property(e => e.HighGasPrice).HasColumnType("bigint");
             entity.Property(e => e.MediumGasPrice).HasColumnType("bigint");
@@ -42,11 +42,11 @@ public class BlockchainDbContext : DbContext
             entity.Property(e => e.MediumPriorityFee).HasColumnType("bigint");
             entity.Property(e => e.LowPriorityFee).HasColumnType("bigint");
             entity.Property(e => e.BaseFee).HasColumnType("bigint");
-            
+
             // Fork information
             entity.Property(e => e.LastForkHeight).HasColumnType("bigint");
             entity.Property(e => e.LastForkHash).HasMaxLength(100);
-            
+
             // Historical timestamp
             entity.Property(e => e.CreatedAt).IsRequired();
 
@@ -56,4 +56,4 @@ public class BlockchainDbContext : DbContext
             entity.HasIndex(e => new { e.Name, e.CreatedAt }); // Composite index for name + time queries (most common)
         });
     }
-} 
+}

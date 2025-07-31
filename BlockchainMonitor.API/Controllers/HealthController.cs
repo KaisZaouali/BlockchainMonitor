@@ -32,7 +32,7 @@ public class HealthController : ControllerBase
         try
         {
             _logger.LogDebug("Health check requested");
-            
+
             return Ok(new
             {
                 status = "healthy",
@@ -63,10 +63,10 @@ public class HealthController : ControllerBase
         try
         {
             _logger.LogDebug("Detailed health check requested");
-            
+
             // Test database connectivity
             var totalRecords = await _blockchainService.GetTotalRecordsAsync();
-            
+
             return Ok(new
             {
                 status = "healthy",
@@ -91,4 +91,4 @@ public class HealthController : ControllerBase
             });
         }
     }
-} 
+}

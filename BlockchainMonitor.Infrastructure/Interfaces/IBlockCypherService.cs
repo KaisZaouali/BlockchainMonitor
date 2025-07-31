@@ -10,4 +10,4 @@ public interface IBlockCypherService
     Task<BlockchainData?> FetchBitcoinTestDataAsync();
     Task<BlockchainData?> FetchLitecoinDataAsync();
     Task<BlockchainData?> FetchBlockchainDataAsync(string blockchainName);
-} 
+}

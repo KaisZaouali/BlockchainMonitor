@@ -121,7 +121,27 @@ dotnet test
 - **Integration Tests**: 19 tests covering API endpoints and data flow
 - **E2E Tests**: 14 tests covering full application flow with Playwright
 
+## 🎨 Code Formatting
 
+### Automated Formatting
+```bash
+# Format all code
+./scripts/format-code.sh
+
+# Format only
+dotnet format
+```
+
+### Configuration
+- **EditorConfig**: Consistent formatting rules (120 char line limit, spacing, etc.)
+- **Format Script**: One-command formatting and testing
+
+### Formatting Rules
+- **Line Length**: Maximum 120 characters
+- **Indentation**: 4 spaces for C#, 2 spaces for JSON/YAML
+- **File Endings**: Unix line endings (LF)
+- **Trailing Whitespace**: Automatically removed
+- **Final Newline**: Required at end of files
 
 ## 📈 Performance Features
 

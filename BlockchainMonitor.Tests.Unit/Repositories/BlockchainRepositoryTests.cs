@@ -250,7 +250,7 @@ public class BlockchainRepositoryTests
         // Assert
         result.Should().NotBeNull();
         result.Name.Should().Be("BTC.main");
-        
+
         var savedData = await context.BlockchainData.FirstOrDefaultAsync(x => x.Name == "BTC.main");
         savedData.Should().NotBeNull();
         savedData!.Height.Should().Be(800000);
@@ -324,4 +324,4 @@ public class BlockchainRepositoryTests
         // Assert
         result.Should().BeNull();
     }
-} 
+}

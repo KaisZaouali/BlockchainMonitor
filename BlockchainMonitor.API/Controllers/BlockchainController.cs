@@ -47,7 +47,7 @@ public class BlockchainController : ControllerBase
     public async Task<ActionResult<IEnumerable<BlockchainDataDto>>> GetBlockchainHistory(
         [Required]
         [StringLength(20, MinimumLength = 1)]
-        string blockchainName, 
+        string blockchainName,
         [FromQuery]
         [Range(1, BlockchainConstants.MaxHistoryLimit)]
         int limit = BlockchainConstants.DefaultHistoryLimit)
@@ -62,4 +62,4 @@ public class BlockchainController : ControllerBase
         var data = await _blockchainService.GetLatestDataAsync();
         return Ok(data);
     }
-} 
+}

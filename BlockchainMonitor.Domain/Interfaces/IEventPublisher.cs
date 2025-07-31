@@ -10,4 +10,4 @@ public interface IEventPublisher
     /// </summary>
     /// <param name="event">The domain event to publish</param>
     void Publish<TEvent>(TEvent @event) where TEvent : class;
-} 
+}

@@ -62,4 +62,4 @@ public interface IMetricsService
     /// </summary>
     /// <returns>A dictionary containing all metric values</returns>
     Task<Dictionary<string, object>> GetMetrics();
-} 
+}

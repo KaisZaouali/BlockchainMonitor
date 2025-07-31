@@ -13,7 +13,7 @@ namespace BlockchainMonitor.Infrastructure.Repositories;
 /// </summary>
 public class BlockchainRepository : Repository<BlockchainData>, IBlockchainRepository
 {
-    public BlockchainRepository(BlockchainDbContext context, IMetricsService metricsService) 
+    public BlockchainRepository(BlockchainDbContext context, IMetricsService metricsService)
         : base(context, metricsService)
     {
     }
@@ -42,7 +42,7 @@ public class BlockchainRepository : Repository<BlockchainData>, IBlockchainRepos
             .GroupBy(x => x.Name)
             .Select(g => g.OrderByDescending(x => x.CreatedAt).First())
             .ToListAsync();
-        
+
         return latestRecords;
     }
 
@@ -58,4 +58,4 @@ public class BlockchainRepository : Repository<BlockchainData>, IBlockchainRepos
     {
         return await _dbSet.CountAsync();
     }
-} 
+}

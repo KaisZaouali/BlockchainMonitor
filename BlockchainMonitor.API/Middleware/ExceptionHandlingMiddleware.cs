@@ -36,7 +36,7 @@ public class ExceptionHandlingMiddleware
     private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         context.Response.ContentType = "application/json";
-        
+
         var response = new
         {
             error = new
@@ -61,7 +61,7 @@ public class ExceptionHandlingMiddleware
                     }
                 };
                 break;
-            
+
             case InvalidBlockchainDataException:
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 response = new
@@ -74,7 +74,7 @@ public class ExceptionHandlingMiddleware
                     }
                 };
                 break;
-            
+
             case ArgumentException:
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 response = new
@@ -87,7 +87,7 @@ public class ExceptionHandlingMiddleware
                     }
                 };
                 break;
-            
+
             case InvalidOperationException:
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 response = new
@@ -100,7 +100,7 @@ public class ExceptionHandlingMiddleware
                     }
                 };
                 break;
-            
+
             default:
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 break;
@@ -113,4 +113,4 @@ public class ExceptionHandlingMiddleware
 
         await context.Response.WriteAsync(jsonResponse);
     }
-} 
+}

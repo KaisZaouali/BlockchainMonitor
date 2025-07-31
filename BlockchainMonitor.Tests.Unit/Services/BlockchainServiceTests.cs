@@ -296,7 +296,7 @@ public class BlockchainServiceTests
         };
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidBlockchainDataException>(() => 
+        await Assert.ThrowsAsync<InvalidBlockchainDataException>(() =>
             _service.CreateBlockchainDataAsync(dto));
     }
 
@@ -314,7 +314,7 @@ public class BlockchainServiceTests
         };
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidBlockchainDataException>(() => 
+        await Assert.ThrowsAsync<InvalidBlockchainDataException>(() =>
             _service.CreateBlockchainDataAsync(dto));
     }
 
@@ -333,7 +333,7 @@ public class BlockchainServiceTests
         };
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidBlockchainDataException>(() => 
+        await Assert.ThrowsAsync<InvalidBlockchainDataException>(() =>
             _service.CreateBlockchainDataAsync(dto));
     }
-} 
+}

@@ -45,7 +45,7 @@ public class BlockchainService : IBlockchainService
     public async Task<IEnumerable<BlockchainDataDto>> GetAllBlockchainDataAsync()
     {
         var cacheKey = GetAllBlockchainDataCacheKey();
-        
+
         // Try to get from cache first
         var cachedData = await _cacheService.GetAsync<IEnumerable<BlockchainDataDto>>(cacheKey);
         if (cachedData != null)
@@ -68,7 +68,7 @@ public class BlockchainService : IBlockchainService
     {
         // we could use history records cache key here, but it's not necessary in case users are spamming the latest blockchain data endpoint
         var cacheKey = GetLatestBlockchainDataCacheKey(blockchainName);
-        
+
         // Try to get from cache first
         var cachedData = await _cacheService.GetAsync<BlockchainDataDto>(cacheKey);
         if (cachedData != null)
@@ -97,11 +97,11 @@ public class BlockchainService : IBlockchainService
     {
         // Always cache with max limit, but return only requested limit
         var cacheKey = GetBlockchainHistoryCacheKey(blockchainName);
-        
+
         // Try to get from cache first
         var cachedData = await _cacheService.GetAsync<IEnumerable<BlockchainDataDto>>(cacheKey);
         if (cachedData != null)
-        {   
+        {
             _logger.LogInformation("Cached data found for {CacheKey}", cacheKey);
             // Return only the requested limit from cached data
             return cachedData.Take(limit);
@@ -122,7 +122,7 @@ public class BlockchainService : IBlockchainService
     {
         // we could use total records cache key here, but it's not necessary in case users are spamming the latest data endpoint
         var cacheKey = GetLatestDataCacheKey();
-        
+
         // Try to get from cache first
         var cachedData = await _cacheService.GetAsync<IEnumerable<BlockchainDataDto>>(cacheKey);
         if (cachedData != null)
@@ -176,7 +176,7 @@ public class BlockchainService : IBlockchainService
     public async Task<int> GetTotalRecordsAsync()
     {
         var cacheKey = GetTotalRecordsCacheKey();
-        
+
         // Try to get from cache first
         var cachedData = await _cacheService.GetAsync<int>(cacheKey);
         if (cachedData != 0)
@@ -211,4 +211,4 @@ public class BlockchainService : IBlockchainService
     private static string GetLatestBlockchainDataCacheKey(string blockchainName) => $"latest_blockchain_data_{blockchainName}";
     private static string GetBlockchainHistoryCacheKey(string blockchainName) => $"blockchain_history_{blockchainName}";
     private static string GetTotalRecordsCacheKey() => "total_blockchain_records";
-} 
+}

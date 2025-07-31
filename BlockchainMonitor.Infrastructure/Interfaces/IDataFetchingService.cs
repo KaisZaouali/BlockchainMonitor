@@ -8,4 +8,4 @@ public interface IDataFetchingService
     Task FetchAndStoreBitcoinDataAsync();
     Task FetchAndStoreBitcoinTestDataAsync();
     Task FetchAndStoreLitecoinDataAsync();
-} 
+}

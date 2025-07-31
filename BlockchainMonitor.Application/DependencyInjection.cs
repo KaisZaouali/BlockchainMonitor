@@ -10,10 +10,10 @@ public static class DependencyInjection
     public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddMemoryCache();
-        
+
         // Register application services
         services.AddScoped<IBlockchainService, BlockchainService>();
 
         return services;
     }
-} 
+}

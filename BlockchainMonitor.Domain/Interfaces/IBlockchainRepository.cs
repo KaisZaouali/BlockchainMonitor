@@ -9,4 +9,4 @@ public interface IBlockchainRepository : IRepository<BlockchainData>
     Task<IEnumerable<BlockchainData>> GetLatestDataAsync();
     Task<IEnumerable<BlockchainData>> GetByDateRangeAsync(DateTime startDate, DateTime endDate);
     Task<int> GetTotalRecordsAsync();
-} 
+}

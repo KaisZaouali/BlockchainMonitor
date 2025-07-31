@@ -25,7 +25,7 @@ public class LoggingMiddleware
         try
         {
             // Log request
-            _logger.LogInformation("🚪 Gateway Request: {Method} {Path} from {UserAgent}", 
+            _logger.LogInformation("🚪 Gateway Request: {Method} {Path} from {UserAgent}",
                 requestMethod, requestPath, context.Request.Headers.UserAgent.ToString());
 
             await _next(context);
@@ -33,7 +33,7 @@ public class LoggingMiddleware
             stopwatch.Stop();
 
             // Log response
-            _logger.LogInformation("✅ Gateway Response: {Method} {Path} - {StatusCode} in {ElapsedMs}ms", 
+            _logger.LogInformation("✅ Gateway Response: {Method} {Path} - {StatusCode} in {ElapsedMs}ms",
                 requestMethod, requestPath, context.Response.StatusCode, stopwatch.Elapsed.TotalMilliseconds);
 
             // Console output for easy monitoring
@@ -42,9 +42,9 @@ public class LoggingMiddleware
         catch (Exception ex)
         {
             stopwatch.Stop();
-            
+
             // Log error
-            _logger.LogError(ex, "❌ Gateway Error: {Method} {Path} in {ElapsedMs}ms", 
+            _logger.LogError(ex, "❌ Gateway Error: {Method} {Path} in {ElapsedMs}ms",
                 requestMethod, requestPath, stopwatch.Elapsed.TotalMilliseconds);
 
             throw;

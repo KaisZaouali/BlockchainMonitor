@@ -19,4 +19,4 @@ public class HealthController : ControllerBase
         _logger.LogInformation("Health check requested");
         return Ok(new { status = "healthy", timestamp = DateTime.UtcNow });
     }
-} 
+}

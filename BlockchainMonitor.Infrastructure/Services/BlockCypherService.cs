@@ -22,8 +22,8 @@ public class BlockCypherService : IBlockCypherService
     private readonly IMetricsService _metricsService;
 
     public BlockCypherService(
-        HttpClient httpClient, 
-        IConfiguration configuration, 
+        HttpClient httpClient,
+        IConfiguration configuration,
         ILogger<BlockCypherService> logger,
         IOptions<RetrySettings> retrySettings,
         IMetricsService metricsService)
@@ -73,20 +73,20 @@ public class BlockCypherService : IBlockCypherService
                 _logger.LogInformation("Full URL: {Url}", url);
 
                 var response = await _httpClient.GetAsync(url);
-                
+
                 if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
                 {
                     var delayMs = _retrySettings.RetryDelayMs * (int)Math.Pow(2, attempt - 1); // Exponential backoff
-                    _logger.LogWarning("Rate limited for blockchain {BlockchainName}. Attempt {Attempt}/{MaxRetries}. Waiting {DelayMs}ms", 
+                    _logger.LogWarning("Rate limited for blockchain {BlockchainName}. Attempt {Attempt}/{MaxRetries}. Waiting {DelayMs}ms",
                         blockchainName, attempt, _retrySettings.MaxRetryAttempts, delayMs);
-                    
+
                     if (attempt < _retrySettings.MaxRetryAttempts)
                     {
                         await Task.Delay(delayMs);
                         continue;
                     }
                 }
-                
+
                 response.EnsureSuccessStatusCode();
 
                 var jsonContent = await response.Content.ReadAsStringAsync();
@@ -99,7 +99,7 @@ public class BlockCypherService : IBlockCypherService
                 {
                     blockchainData.CreatedAt = DateTime.UtcNow;
                     _metricsService.IncrementBlockchainDataFetched(blockchainName);
-                    _logger.LogInformation("Successfully fetched data for {BlockchainName}: Height {Height}", 
+                    _logger.LogInformation("Successfully fetched data for {BlockchainName}: Height {Height}",
                         blockchainData.Name, blockchainData.Height);
                 }
 
@@ -108,15 +108,15 @@ public class BlockCypherService : IBlockCypherService
             catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
             {
                 var delayMs = _retrySettings.RetryDelayMs * (int)Math.Pow(2, attempt - 1);
-                _logger.LogWarning("Rate limited for blockchain {BlockchainName}. Attempt {Attempt}/{MaxRetries}. Waiting {DelayMs}ms", 
+                _logger.LogWarning("Rate limited for blockchain {BlockchainName}. Attempt {Attempt}/{MaxRetries}. Waiting {DelayMs}ms",
                     blockchainName, attempt, _retrySettings.MaxRetryAttempts, delayMs);
-                
+
                 if (attempt < _retrySettings.MaxRetryAttempts)
                 {
                     await Task.Delay(delayMs);
                     continue;
                 }
-                
+
                 _logger.LogError(ex, "HTTP request failed after {MaxRetries} attempts for blockchain {BlockchainName}", _retrySettings.MaxRetryAttempts, blockchainName);
                 return null;
             }
@@ -139,4 +139,4 @@ public class BlockCypherService : IBlockCypherService
 
         return null;
     }
-} 
+}

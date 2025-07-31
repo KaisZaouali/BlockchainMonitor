@@ -20,13 +20,13 @@ public class BlockchainDataCreatedConsumer : BackgroundService
     private const string QueueName = "api_cache_invalidation";
 
     public BlockchainDataCreatedConsumer(
-        IConfiguration configuration, 
+        IConfiguration configuration,
         IServiceScopeFactory serviceScopeFactory,
         ILogger<BlockchainDataCreatedConsumer> logger)
     {
         _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        
+
         var rabbitMqConfig = configuration.GetSection("RabbitMQ");
         var hostName = rabbitMqConfig["HostName"] ?? "localhost";
         var userName = rabbitMqConfig["UserName"] ?? "guest";
@@ -43,16 +43,16 @@ public class BlockchainDataCreatedConsumer : BackgroundService
 
         _connection = factory.CreateConnection();
         _channel = _connection.CreateModel();
-        
+
         // Declare exchange
         _channel.ExchangeDeclare(ExchangeName, ExchangeType.Fanout, durable: true);
-        
+
         // Declare queue
         _channel.QueueDeclare(QueueName, durable: true, exclusive: false, autoDelete: false);
-        
+
         // Bind queue to exchange
         _channel.QueueBind(QueueName, ExchangeName, routingKey: string.Empty);
-        
+
         _logger.LogInformation("BlockchainDataCreatedConsumer initialized");
     }
 
@@ -65,16 +65,16 @@ public class BlockchainDataCreatedConsumer : BackgroundService
             {
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
-                
+
                 _logger.LogInformation("Received message: {Message}", message);
-                
+
                 // Deserialize and handle the event
                 var eventData = JsonSerializer.Deserialize<BlockchainDataCreatedEvent>(message);
                 if (eventData != null)
                 {
                     await HandleBlockchainDataCreatedEvent(eventData);
                 }
-                
+
                 // Acknowledge the message
                 _channel.BasicAck(ea.DeliveryTag, false);
             }
@@ -87,7 +87,7 @@ public class BlockchainDataCreatedConsumer : BackgroundService
         };
 
         _channel.BasicConsume(queue: QueueName, autoAck: false, consumer: consumer);
-        
+
         return Task.CompletedTask;
     }
 
@@ -96,14 +96,14 @@ public class BlockchainDataCreatedConsumer : BackgroundService
         try
         {
             _logger.LogInformation("Handling BlockchainDataCreatedEvent for blockchain: {BlockchainName}", @event.BlockchainName);
-            
+
             // Create a scope to resolve scoped services
             using var scope = _serviceScopeFactory.CreateScope();
             var blockchainService = scope.ServiceProvider.GetRequiredService<IBlockchainService>();
-            
+
             // Invalidate related caches
             await blockchainService.InvalidateRelatedCaches(@event.BlockchainName);
-            
+
             _logger.LogInformation("Successfully invalidated caches for blockchain: {BlockchainName}", @event.BlockchainName);
         }
         catch (Exception ex)
@@ -119,4 +119,4 @@ public class BlockchainDataCreatedConsumer : BackgroundService
         _connection?.Dispose();
         base.Dispose();
     }
-} 
+}

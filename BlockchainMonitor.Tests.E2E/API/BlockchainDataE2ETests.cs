@@ -9,9 +9,9 @@ namespace BlockchainMonitor.Tests.E2E.API;
 public class BlockchainDataE2ETests
 {
     private const string BaseUrl = "http://localhost:5003";
-    
+
     private static string ExtractJsonFromHtml(string content)
-    {   
+    {
         // Check if content is wrapped in HTML with <pre> tags
         if (content.Contains("<pre>") && content.Contains("</pre>"))
         {
@@ -20,7 +20,7 @@ public class BlockchainDataE2ETests
             var extracted = content.Substring(startIndex, endIndex - startIndex);
             return extracted;
         }
-        
+
         // Check if content starts with HTML but doesn't have <pre> tags
         if (content.StartsWith("<html>") || content.StartsWith("<!DOCTYPE"))
         {
@@ -45,12 +45,12 @@ public class BlockchainDataE2ETests
                         }
                     }
                 }
-                
+
                 var extracted = content.Substring(jsonStart, jsonEnd - jsonStart);
                 return extracted;
             }
         }
-        
+
         // If not HTML, return as-is
         return content;
     }
@@ -69,7 +69,7 @@ public class BlockchainDataE2ETests
         // Assert
         response.Should().NotBeNull();
         response!.Status.Should().Be(200);
-        
+
         var content = await page.ContentAsync();
         content.Should().Contain("healthy");
     }
@@ -88,7 +88,7 @@ public class BlockchainDataE2ETests
         // Assert
         response.Should().NotBeNull();
         response!.Status.Should().Be(200);
-        
+
         // Verify Swagger UI elements are present
         await page.WaitForSelectorAsync(".swagger-ui");
         var title = await page.TitleAsync();
@@ -109,14 +109,14 @@ public class BlockchainDataE2ETests
         // Assert
         response.Should().NotBeNull();
         response!.Status.Should().Be(200);
-        
+
         var content = await page.ContentAsync();
-        
+
         content.Should().NotBeNullOrEmpty();
-        
+
         // Extract JSON from HTML if needed
         var jsonContent = ExtractJsonFromHtml(content);
-        
+
         // Verify it's valid JSON
         var data = JsonSerializer.Deserialize<object>(jsonContent);
         data.Should().NotBeNull();
@@ -136,7 +136,7 @@ public class BlockchainDataE2ETests
         // Assert
         response.Should().NotBeNull();
         response!.Status.Should().Be(200);
-        
+
         // Check if response headers contain JSON content type
         var headers = response.Headers;
         headers.Should().ContainKey("content-type");
@@ -173,14 +173,14 @@ public class BlockchainDataE2ETests
         // Assert
         response.Should().NotBeNull();
         response!.Status.Should().Be(200);
-        
+
         var content = await page.ContentAsync();
-        
+
         content.Should().NotBeNullOrEmpty();
-        
+
         // Extract JSON from HTML if needed
         var jsonContent = ExtractJsonFromHtml(content);
-        
+
         // Verify it's a valid JSON array
         var data = JsonSerializer.Deserialize<object[]>(jsonContent);
         data.Should().NotBeNull();
@@ -200,12 +200,12 @@ public class BlockchainDataE2ETests
         // Assert
         response.Should().NotBeNull();
         response!.Status.Should().Be(200);
-        
+
         var content = await page.ContentAsync();
-        
+
         // Extract JSON from HTML if needed
         var jsonContent = ExtractJsonFromHtml(content);
-        
+
         var data = JsonSerializer.Deserialize<object[]>(jsonContent);
         data.Should().NotBeNull();
         data!.Length.Should().BeGreaterThanOrEqualTo(0);
@@ -236,7 +236,7 @@ public class BlockchainDataE2ETests
         deserialized!.Name.Should().Be("BTC.main");
         deserialized.Height.Should().Be(800000L);
         deserialized.Hash.Should().Be("test-hash-123");
-        
+
         return Task.CompletedTask;
     }
 
@@ -258,7 +258,7 @@ public class BlockchainDataE2ETests
         // Assert
         allErrorCodes.Should().BeTrue();
         allHaveMessages.Should().BeTrue();
-        
+
         return Task.CompletedTask;
     }
 
@@ -279,7 +279,7 @@ public class BlockchainDataE2ETests
         // Assert
         allSuccessCodes.Should().BeTrue();
         allHaveData.Should().BeTrue();
-        
+
         return Task.CompletedTask;
     }
 
@@ -302,4 +302,4 @@ public class BlockchainDataE2ETests
         response.Should().NotBeNull();
         response!.Status.Should().Be(expectedStatus);
     }
-} 
+}

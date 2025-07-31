@@ -307,4 +307,4 @@ public class BlockchainDataTests
         blockchainData.PeerCount.Should().Be(-1);
         blockchainData.UnconfirmedCount.Should().Be(-1);
     }
-} 
+}

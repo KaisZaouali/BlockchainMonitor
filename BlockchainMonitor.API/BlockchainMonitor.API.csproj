@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BlockchainMonitor.Application\BlockchainMonitor.Application.csproj" />
-    <ProjectReference Include="..\BlockchainMonitor.Infrastructure\BlockchainMonitor.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

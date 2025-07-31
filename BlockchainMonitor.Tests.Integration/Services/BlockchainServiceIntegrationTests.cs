@@ -254,4 +254,4 @@ public class BlockchainServiceIntegrationTests
         result.Should().Be(42);
         _mockRepository.Verify(x => x.GetTotalRecordsAsync(), Times.Once);
     }
-} 
+}

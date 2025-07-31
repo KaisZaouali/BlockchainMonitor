@@ -43,10 +43,10 @@ public class BlockchainDataFetchingBackgroundService : BackgroundService
             try
             {
                 _logger.LogInformation("Starting scheduled blockchain data fetch");
-                
+
                 using var scope = _serviceScopeFactory.CreateScope();
                 var dataFetchingService = scope.ServiceProvider.GetRequiredService<IDataFetchingService>();
-                
+
                 await dataFetchingService.FetchAndStoreAllBlockchainDataAsync();
                 _logger.LogInformation("Completed scheduled blockchain data fetch");
             }

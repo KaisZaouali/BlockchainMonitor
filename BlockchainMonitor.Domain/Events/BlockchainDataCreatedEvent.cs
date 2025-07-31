@@ -13,4 +13,4 @@ public class BlockchainDataCreatedEvent
         BlockchainName = blockchainName ?? throw new ArgumentNullException(nameof(blockchainName));
         OccurredOn = DateTime.UtcNow;
     }
-} 
+}

@@ -37,14 +37,14 @@ public class MetricsTrackingMiddleware
         {
             // Track request
             _metricsService.IncrementRequestCount($"{requestMethod} {requestPath}");
-            
+
             await _next(context);
-            
+
             stopwatch.Stop();
-            
+
             // Track response time
             _metricsService.RecordResponseTime($"{requestMethod} {requestPath}", stopwatch.Elapsed);
-            
+
             // Check if rate limit was exceeded (429 status code)
             if (context.Response.StatusCode == 429)
             {
@@ -55,11 +55,11 @@ public class MetricsTrackingMiddleware
         catch (Exception ex)
         {
             stopwatch.Stop();
-            
+
             // Track error
             _metricsService.IncrementErrorCount($"{requestMethod} {requestPath}", ex.GetType().Name);
-            
+
             throw;
         }
     }
-} 
+}

@@ -16,7 +16,7 @@ public class CacheService : ICacheService
     private readonly CacheSettings _cacheSettings;
     private readonly IMetricsService _metricsService;
 
-    public CacheService(IMemoryCache memoryCache, 
+    public CacheService(IMemoryCache memoryCache,
         IOptions<CacheSettings> cacheSettings,
         IMetricsService metricsService)
     {
@@ -28,7 +28,7 @@ public class CacheService : ICacheService
     public Task<T?> GetAsync<T>(string key)
     {
         var value = _memoryCache.Get<T>(key);
-        
+
         if (value != null)
         {
             _metricsService.IncrementCacheHit(key);
@@ -37,14 +37,14 @@ public class CacheService : ICacheService
         {
             _metricsService.IncrementCacheMiss(key);
         }
-        
+
         return Task.FromResult(value);
     }
 
     public Task SetAsync<T>(string key, T value, TimeSpan? expiration = null)
     {
         var options = new MemoryCacheEntryOptions();
-        
+
         if (expiration.HasValue)
         {
             options.AbsoluteExpirationRelativeToNow = expiration;
@@ -68,7 +68,7 @@ public class CacheService : ICacheService
     public Task<bool> ExistsAsync(string key)
     {
         var exists = _memoryCache.TryGetValue(key, out _);
-        
+
         if (exists)
         {
             _metricsService.IncrementCacheHit(key);
@@ -77,7 +77,7 @@ public class CacheService : ICacheService
         {
             _metricsService.IncrementCacheMiss(key);
         }
-        
+
         return Task.FromResult(exists);
     }
-} 
+}

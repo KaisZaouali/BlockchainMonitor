@@ -138,4 +138,4 @@ public class DataFetchingService : IDataFetchingService
             _logger.LogError(ex, "Error fetching and storing Litecoin data");
         }
     }
-} 
+}

@@ -32,4 +32,4 @@ public class MetricsController : ControllerBase
             return StatusCode(500, new { error = "Failed to retrieve metrics", message = ex.Message });
         }
     }
-} 
+}
