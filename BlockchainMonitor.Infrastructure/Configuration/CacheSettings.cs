@@ -1,4 +1,4 @@
-namespace BlockchainMonitor.Application.Configuration;
+namespace BlockchainMonitor.Infrastructure.Configuration;
 
 public class CacheSettings
 {

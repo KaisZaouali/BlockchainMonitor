@@ -1,4 +1,4 @@
-namespace BlockchainMonitor.Application.Interfaces;
+namespace BlockchainMonitor.Infrastructure.Interfaces;
 
 public interface ICacheService
 {

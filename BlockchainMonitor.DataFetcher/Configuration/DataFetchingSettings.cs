@@ -17,5 +17,5 @@ public class DataFetchingSettings
     /// <summary>
     /// Interval in seconds between data fetching operations
     /// </summary>
-    public int IntervalSeconds { get; set; } = 60;
+    public int IntervalSeconds { get; set; } = 600;
 } 

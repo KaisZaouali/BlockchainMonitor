@@ -8,10 +8,11 @@ using BlockchainMonitor.Application.Interfaces;
 using BlockchainMonitor.Domain.Interfaces;
 using BlockchainMonitor.Application.DTOs;
 using BlockchainMonitor.Domain.Entities;
-using BlockchainMonitor.Application.Configuration;
+using BlockchainMonitor.Infrastructure.Configuration;
 using BlockchainMonitor.Domain.Events;
 using BlockchainMonitor.Application.Exceptions;
 using BlockchainMonitor.Application.Constants;
+using BlockchainMonitor.Infrastructure.Interfaces;
 
 namespace BlockchainMonitor.Tests.Unit.Services;
 

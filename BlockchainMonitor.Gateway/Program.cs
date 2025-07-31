@@ -1,11 +1,14 @@
-using Yarp.ReverseProxy.Configuration;
 using BlockchainMonitor.Gateway.Middleware;
+using BlockchainMonitor.Infrastructure;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+// Add Gateway Services (metrics and Redis only, no caching)
+builder.Services.AddGatewayServices(builder.Configuration);
 
 // Add YARP Reverse Proxy
 builder.Services.AddReverseProxy()
@@ -51,8 +54,14 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors();
+
+// Add rate limiting
 app.UseRateLimiter();
-app.UseGatewayMiddleware();
+
+// Add metrics tracking middleware (after rate limiter to catch 429 responses)
+app.UseMiddleware<MetricsTrackingMiddleware>();
+
+app.UseMiddleware<LoggingMiddleware>();
 
 app.MapControllers();
 

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain Monitor - Local Metrics Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .metric-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+        .metric-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .metric-icon {
+            margin-right: 10px;
+            font-size: 1.5em;
+        }
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .metric-description {
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        .metric-details {
+            margin-top: 10px;
+            font-size: 0.8em;
+            color: #888;
+        }
+        .refresh-button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            margin-bottom: 20px;
+        }
+        .refresh-button:hover {
+            transform: scale(1.05);
+        }
+        .error-message {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.2em;
+            margin: 20px 0;
+        }
+        .timestamp {
+            text-align: center;
+            color: white;
+            opacity: 0.8;
+            font-size: 0.9em;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔗 Blockchain Monitor</h1>
+            <p>Real-time Metrics Dashboard</p>
+        </div>
+
+        <button class="refresh-button" onclick="loadMetrics()">🔄 Refresh Metrics</button>
+        
+        <div id="error-message" class="error-message" style="display: none;"></div>
+        <div id="loading" class="loading" style="display: none;">Loading metrics...</div>
+
+        <div class="metrics-grid" id="metrics-grid">
+            <!-- Metrics will be populated here -->
+        </div>
+
+        <div class="timestamp" id="timestamp"></div>
+    </div>
+
+    <script>
+        const GATEWAY_URL = 'http://localhost:5003';
+        
+        async function loadMetrics() {
+            const loadingEl = document.getElementById('loading');
+            const errorEl = document.getElementById('error-message');
+            const metricsGrid = document.getElementById('metrics-grid');
+            const timestampEl = document.getElementById('timestamp');
+
+            loadingEl.style.display = 'block';
+            errorEl.style.display = 'none';
+
+            try {
+                const response = await fetch(`${GATEWAY_URL}/api/metrics`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const metrics = await response.json();
+                displayMetrics(metrics);
+                timestampEl.textContent = `Last updated: ${new Date().toLocaleString()}`;
+            } catch (error) {
+                console.error('Error loading metrics:', error);
+                errorEl.textContent = `Failed to load metrics: ${error.message}`;
+                errorEl.style.display = 'block';
+            } finally {
+                loadingEl.style.display = 'none';
+            }
+        }
+
+        function displayMetrics(metrics) {
+            const metricsGrid = document.getElementById('metrics-grid');
+            metricsGrid.innerHTML = '';
+
+            // Process and display metrics
+            const processedMetrics = processMetrics(metrics);
+            
+            processedMetrics.forEach(metric => {
+                const card = document.createElement('div');
+                card.className = 'metric-card';
+                card.innerHTML = `
+                    <div class="metric-title">
+                        <span class="metric-icon">${metric.icon}</span>
+                        ${metric.title}
+                    </div>
+                    <div class="metric-value">${metric.value}</div>
+                    <div class="metric-description">${metric.description}</div>
+                    ${metric.details ? `<div class="metric-details">${metric.details}</div>` : ''}
+                `;
+                metricsGrid.appendChild(card);
+            });
+        }
+
+        function processMetrics(metrics) {
+            const processed = [];
+
+            // Total Requests
+            if (metrics.request_count > 0) {
+                processed.push({
+                    icon: '📊',
+                    title: 'Total Requests',
+                    value: metrics.request_count.toLocaleString(),
+                    description: 'Total API requests processed across all endpoints'
+                });
+            }
+
+            // Total Errors
+            if (metrics.error_count > 0) {
+                processed.push({
+                    icon: '⚠️',
+                    title: 'Total Errors',
+                    value: metrics.error_count.toLocaleString(),
+                    description: 'Total errors encountered across all endpoints'
+                });
+            }
+
+            // Response Times
+            if (metrics.response_time > 0) {
+                const responseTimeCount = metrics.response_time_count || 0;
+                processed.push({
+                    icon: '⏱️',
+                    title: 'Avg Response Time',
+                    value: `${metrics.response_time.toFixed(2)}ms`,
+                    description: 'Average response time across all endpoints',
+                    details: `Based on ${responseTimeCount} measurements`
+                });
+            }
+
+            // Blockchain data fetched
+            if (metrics.blockchain_data_fetched > 0) {
+                processed.push({
+                    icon: '🔗',
+                    title: 'Data Fetched',
+                    value: metrics.blockchain_data_fetched.toLocaleString(),
+                    description: 'Total blockchain data fetch operations'
+                });
+            }
+
+            // Cache performance
+            const totalHits = metrics.cache_hit || 0;
+            const totalMisses = metrics.cache_miss || 0;
+            if (totalHits + totalMisses > 0) {
+                const hitRate = (totalHits / (totalHits + totalMisses) * 100);
+                processed.push({
+                    icon: '💾',
+                    title: 'Cache Hit Rate',
+                    value: `${hitRate.toFixed(1)}%`,
+                    description: `Cache hit rate (${totalHits} hits, ${totalMisses} misses)`
+                });
+            }
+
+            // Database operations
+            if (metrics.database_operation > 0) {
+                const dbOperationCount = metrics.database_operation_count || 0;
+                processed.push({
+                    icon: '🗄️',
+                    title: 'Avg DB Operation',
+                    value: `${metrics.database_operation.toFixed(2)}ms`,
+                    description: 'Average database operation time',
+                    details: `Based on ${dbOperationCount} measurements`
+                });
+            }
+
+            // Rate limit exceeded
+            if (metrics.rate_limit_exceeded > 0) {
+                processed.push({
+                    icon: '🚫',
+                    title: 'Rate Limited',
+                    value: metrics.rate_limit_exceeded.toLocaleString(),
+                    description: 'Total requests that exceeded rate limits'
+                });
+            }
+
+            return processed;
+        }
+
+        // Load metrics on page load
+        document.addEventListener('DOMContentLoaded', loadMetrics);
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadMetrics, 30000);
+    </script>
+</body>
+</html> 

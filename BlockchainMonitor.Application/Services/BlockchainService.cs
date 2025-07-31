@@ -2,10 +2,11 @@ using BlockchainMonitor.Application.DTOs;
 using BlockchainMonitor.Application.Exceptions;
 using BlockchainMonitor.Application.Interfaces;
 using BlockchainMonitor.Application.Constants;
-using BlockchainMonitor.Application.Configuration;
 using BlockchainMonitor.Application.Mappers;
 using BlockchainMonitor.Domain.Events;
 using BlockchainMonitor.Domain.Interfaces;
+using BlockchainMonitor.Infrastructure.Interfaces;
+using BlockchainMonitor.Infrastructure.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 

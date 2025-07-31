@@ -1,5 +1,6 @@
 using BlockchainMonitor.Domain.Interfaces;
 using BlockchainMonitor.Infrastructure.Data;
+using BlockchainMonitor.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace BlockchainMonitor.Infrastructure.Repositories;
@@ -7,19 +8,21 @@ namespace BlockchainMonitor.Infrastructure.Repositories;
 public class UnitOfWork : IUnitOfWork
 {
     private readonly BlockchainDbContext _context;
+    private readonly IMetricsService _metricsService;
     private IBlockchainRepository? _blockchainRepository;
     private IDbContextTransaction? _transaction;
 
-    public UnitOfWork(BlockchainDbContext context)
+    public UnitOfWork(BlockchainDbContext context, IMetricsService metricsService)
     {
         _context = context;
+        _metricsService = metricsService;
     }
 
     public IBlockchainRepository BlockchainRepository
     {
         get
         {
-            _blockchainRepository ??= new BlockchainRepository(_context);
+            _blockchainRepository ??= new BlockchainRepository(_context, _metricsService);
             return _blockchainRepository;
         }
     }

@@ -3,10 +3,10 @@ using Moq;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using BlockchainMonitor.Infrastructure.Data;
 using BlockchainMonitor.Infrastructure.Repositories;
+using BlockchainMonitor.Infrastructure.Data;
 using BlockchainMonitor.Domain.Entities;
-using BlockchainMonitor.Domain.Interfaces;
+using BlockchainMonitor.Infrastructure.Interfaces;
 
 namespace BlockchainMonitor.Tests.Unit.Repositories;
 
@@ -14,6 +14,7 @@ public class BlockchainRepositoryTests
 {
     private readonly DbContextOptions<BlockchainDbContext> _options;
     private readonly Mock<ILogger<BlockchainRepository>> _mockLogger;
+    private readonly Mock<IMetricsService> _mockMetricsService;
 
     public BlockchainRepositoryTests()
     {
@@ -22,6 +23,7 @@ public class BlockchainRepositoryTests
             .Options;
 
         _mockLogger = new Mock<ILogger<BlockchainRepository>>();
+        _mockMetricsService = new Mock<IMetricsService>();
     }
 
     private BlockchainDbContext CreateContext()
@@ -31,7 +33,7 @@ public class BlockchainRepositoryTests
 
     private BlockchainRepository CreateRepository(BlockchainDbContext context)
     {
-        return new BlockchainRepository(context);
+        return new BlockchainRepository(context, _mockMetricsService.Object);
     }
 
     [Fact]

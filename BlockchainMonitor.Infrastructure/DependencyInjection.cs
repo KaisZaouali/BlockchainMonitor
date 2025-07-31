@@ -7,6 +7,7 @@ using BlockchainMonitor.Infrastructure.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using StackExchange.Redis;
 
 namespace BlockchainMonitor.Infrastructure;
 
@@ -20,6 +21,15 @@ public static class DependencyInjection
 
         // Register configuration
         services.Configure<RetrySettings>(configuration.GetSection(RetrySettings.SectionName));
+        services.Configure<CacheSettings>(configuration.GetSection(CacheSettings.SectionName));
+        services.Configure<MetricsSettings>(configuration.GetSection(MetricsSettings.SectionName));
+
+        // Register Redis
+        services.AddSingleton<IConnectionMultiplexer>(provider =>
+        {
+            var redisConnectionString = configuration.GetConnectionString("Redis") ?? "localhost:6379";
+            return ConnectionMultiplexer.Connect(redisConnectionString);
+        });
 
         // Register repositories
         services.AddScoped<IBlockchainRepository, BlockchainRepository>();
@@ -33,6 +43,28 @@ public static class DependencyInjection
         
         // Register event publisher
         services.AddSingleton<IEventPublisher, RabbitMQEventPublisher>();
+        
+        services.AddSingleton<IMetricsService, RedisMetricsService>();
+        
+        // Register cache service
+        services.AddSingleton<ICacheService, CacheService>();
+        
+        return services;
+    }
+
+    public static IServiceCollection AddGatewayServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        // Register configuration
+        services.Configure<MetricsSettings>(configuration.GetSection(MetricsSettings.SectionName));
+
+        // Register Redis
+        services.AddSingleton<IConnectionMultiplexer>(provider =>
+        {
+            var redisConnectionString = configuration.GetConnectionString("Redis") ?? "localhost:6379";
+            return ConnectionMultiplexer.Connect(redisConnectionString);
+        });
+        
+        services.AddSingleton<IMetricsService, RedisMetricsService>();
         
         return services;
     }

@@ -1,13 +1,14 @@
 using BlockchainMonitor.Domain.Entities;
 using BlockchainMonitor.Domain.Interfaces;
 using BlockchainMonitor.Infrastructure.Data;
+using BlockchainMonitor.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlockchainMonitor.Infrastructure.Repositories;
 
 public class BlockchainRepository : Repository<BlockchainData>, IBlockchainRepository
 {
-    public BlockchainRepository(BlockchainDbContext context) : base(context)
+    public BlockchainRepository(BlockchainDbContext context, IMetricsService metricsService) : base(context, metricsService)
     {
     }
 

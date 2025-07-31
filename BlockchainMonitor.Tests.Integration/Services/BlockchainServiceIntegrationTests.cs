@@ -1,15 +1,18 @@
 using Xunit;
+using Moq;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Moq;
 using BlockchainMonitor.Application.Services;
 using BlockchainMonitor.Application.Interfaces;
 using BlockchainMonitor.Domain.Interfaces;
-using BlockchainMonitor.Domain.Entities;
 using BlockchainMonitor.Application.DTOs;
-using BlockchainMonitor.Application.Configuration;
+using BlockchainMonitor.Domain.Entities;
+using BlockchainMonitor.Infrastructure.Configuration;
+using BlockchainMonitor.Domain.Events;
+using BlockchainMonitor.Application.Exceptions;
 using BlockchainMonitor.Application.Constants;
+using BlockchainMonitor.Infrastructure.Interfaces;
 
 namespace BlockchainMonitor.Tests.Integration.Services;
 
@@ -31,7 +34,7 @@ public class BlockchainServiceIntegrationTests
         _mockEventPublisher = new Mock<IEventPublisher>();
         _mockLogger = new Mock<ILogger<BlockchainService>>();
         _mockCacheSettings = new Mock<IOptions<CacheSettings>>();
-        
+
         _mockCacheSettings.Setup(x => x.Value).Returns(new CacheSettings
         {
             AllBlockchainDataDurationMinutes = 5,
@@ -40,13 +43,13 @@ public class BlockchainServiceIntegrationTests
             LatestDataDurationMinutes = 3,
             TotalRecordsDurationMinutes = 1
         });
-        
+
         _service = new BlockchainService(
-            _mockRepository.Object, 
-            _mockUnitOfWork.Object, 
-            _mockCacheService.Object, 
-            _mockEventPublisher.Object, 
-            _mockLogger.Object, 
+            _mockRepository.Object,
+            _mockUnitOfWork.Object,
+            _mockCacheService.Object,
+            _mockEventPublisher.Object,
+            _mockLogger.Object,
             _mockCacheSettings.Object);
     }
 

@@ -14,17 +14,20 @@ public class BlockCypherService : IBlockCypherService
     private readonly IConfiguration _configuration;
     private readonly ILogger<BlockCypherService> _logger;
     private readonly RetrySettings _retrySettings;
+    private readonly IMetricsService _metricsService;
 
     public BlockCypherService(
         HttpClient httpClient, 
         IConfiguration configuration, 
         ILogger<BlockCypherService> logger,
-        IOptions<RetrySettings> retrySettings)
+        IOptions<RetrySettings> retrySettings,
+        IMetricsService metricsService)
     {
         _httpClient = httpClient;
         _configuration = configuration;
         _logger = logger;
         _retrySettings = retrySettings.Value;
+        _metricsService = metricsService;
     }
 
     public async Task<BlockchainData?> FetchEthereumDataAsync()
@@ -90,6 +93,7 @@ public class BlockCypherService : IBlockCypherService
                 if (blockchainData != null)
                 {
                     blockchainData.CreatedAt = DateTime.UtcNow;
+                    _metricsService.IncrementBlockchainDataFetched(blockchainName);
                     _logger.LogInformation("Successfully fetched data for {BlockchainName}: Height {Height}", 
                         blockchainData.Name, blockchainData.Height);
                 }

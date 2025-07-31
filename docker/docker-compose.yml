@@ -1,6 +1,20 @@
 name: BlockchainMonitor
 
 services:
+  # Redis Server
+  redis:
+    image: redis:7-alpine
+    container_name: blockchainmonitor-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - network
+
   # RabbitMQ Server
   rabbitmq:
     image: rabbitmq:3-management
@@ -19,7 +33,7 @@ services:
       timeout: 10s
       retries: 5
     networks:
-      - blockchainmonitor-network
+      - network
 
   # Database Migration Service
   migrate:
@@ -39,7 +53,7 @@ services:
         /root/.dotnet/tools/dotnet-ef database update --project BlockchainMonitor.API --connection 'Data Source=/app/data/blockchain.db'
       "
     networks:
-      - blockchainmonitor-network
+      - network
 
   # API Service (Scaled)
   api:
@@ -51,6 +65,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Data Source=/app/data/blockchain.db
+      - ConnectionStrings__Redis=redis:6379
       - RABBITMQ__HOSTNAME=rabbitmq
       - RABBITMQ__USERNAME=guest
       - RABBITMQ__PASSWORD=guest
@@ -62,6 +77,8 @@ services:
         condition: service_completed_successfully
       rabbitmq:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: 30s
@@ -69,7 +86,7 @@ services:
       retries: 3
       start_period: 40s
     networks:
-      - blockchainmonitor-network
+      - network
     restart: unless-stopped
     deploy:
       replicas: 2
@@ -85,6 +102,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Data Source=/app/data/blockchain.db
+      - ConnectionStrings__Redis=redis:6379
       - RABBITMQ__HOSTNAME=rabbitmq
       - RABBITMQ__USERNAME=guest
       - RABBITMQ__PASSWORD=guest
@@ -96,6 +114,8 @@ services:
         condition: service_completed_successfully
       rabbitmq:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "ps", "aux", "|", "grep", "BlockchainMonitor.DataFetcher"]
       interval: 30s
@@ -103,7 +123,7 @@ services:
       retries: 3
       start_period: 40s
     networks:
-      - blockchainmonitor-network
+      - network
     restart: unless-stopped
 
   # API Gateway Service
@@ -117,8 +137,11 @@ services:
       - "5004:443"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__Redis=redis:6379
     depends_on:
       api:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
@@ -127,7 +150,24 @@ services:
       retries: 3
       start_period: 40s
     networks:
-      - blockchainmonitor-network
+      - network
+    restart: unless-stopped
+
+  # Dashboard Service
+  dashboard:
+    image: python:3.11-alpine
+    container_name: blockchainmonitor-dashboard
+    ports:
+      - "8080:8000"
+    volumes:
+      - ../monitoring:/app
+    working_dir: /app
+    command: sh -c "cd /app && python -m http.server 8000 --bind 0.0.0.0"
+    depends_on:
+      gateway:
+        condition: service_started
+    networks:
+      - network
     restart: unless-stopped
 
 volumes:
@@ -137,5 +177,5 @@ volumes:
     driver: local
 
 networks:
-  blockchainmonitor-network:
+  network:
     driver: bridge 
