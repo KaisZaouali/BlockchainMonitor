@@ -6,6 +6,11 @@ using System.Diagnostics;
 
 namespace BlockchainMonitor.Infrastructure.Repositories;
 
+/// <summary>
+/// Base repository class that provides common database operations with metrics tracking.
+/// Automatically measures and records database operation performance for monitoring.
+/// </summary>
+/// <typeparam name="T">The entity type for this repository</typeparam>
 public class Repository<T> : IRepository<T> where T : class
 {
     protected readonly BlockchainDbContext _context;
@@ -19,6 +24,14 @@ public class Repository<T> : IRepository<T> where T : class
         _metricsService = metricsService;
     }
 
+    /// <summary>
+    /// Executes a database operation with metrics tracking.
+    /// Records the operation time and any errors that occur.
+    /// </summary>
+    /// <typeparam name="TResult">The return type of the operation</typeparam>
+    /// <param name="operation">The database operation to execute</param>
+    /// <param name="operationName">The name of the operation for metrics</param>
+    /// <returns>The result of the database operation</returns>
     protected async Task<TResult> ExecuteWithMetricsAsync<TResult>(Func<Task<TResult>> operation, string operationName)
     {
         var stopwatch = Stopwatch.StartNew();
@@ -37,6 +50,12 @@ public class Repository<T> : IRepository<T> where T : class
         }
     }
 
+    /// <summary>
+    /// Executes a void database operation with metrics tracking.
+    /// Records the operation time and any errors that occur.
+    /// </summary>
+    /// <param name="operation">The database operation to execute</param>
+    /// <param name="operationName">The name of the operation for metrics</param>
     protected async Task ExecuteWithMetricsAsync(Func<Task> operation, string operationName)
     {
         var stopwatch = Stopwatch.StartNew();

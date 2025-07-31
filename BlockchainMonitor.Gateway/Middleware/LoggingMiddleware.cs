@@ -1,7 +1,10 @@
-using Microsoft.Extensions.Logging;
-
 namespace BlockchainMonitor.Gateway.Middleware;
 
+/// <summary>
+/// Logging middleware for API Gateway requests.
+/// Logs incoming requests, successful responses, and errors with timing information.
+/// Provides detailed request/response logging for debugging and monitoring.
+/// </summary>
 public class LoggingMiddleware
 {
     private readonly RequestDelegate _next;

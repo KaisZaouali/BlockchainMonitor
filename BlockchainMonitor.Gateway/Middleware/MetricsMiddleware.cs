@@ -2,6 +2,10 @@ using BlockchainMonitor.Infrastructure.Interfaces;
 
 namespace BlockchainMonitor.Gateway.Middleware;
 
+/// <summary>
+/// Middleware for tracking metrics on API Gateway requests.
+/// Records request counts, response times, errors, and rate limiting events.
+/// </summary>
 public class MetricsTrackingMiddleware
 {
     private readonly RequestDelegate _next;
@@ -13,6 +17,10 @@ public class MetricsTrackingMiddleware
         _metricsService = metricsService;
     }
 
+    /// <summary>
+    /// Processes the HTTP request and records relevant metrics.
+    /// </summary>
+    /// <param name="context">The HTTP context for the request</param>
     public async Task InvokeAsync(HttpContext context)
     {
         if (!context.Request.Path.HasValue || context.Request.Path.Value.Contains("metrics") || context.Request.Path.Value.Contains("health") || context.Request.Path.Value.Contains("swagger"))

@@ -7,6 +7,11 @@ using BlockchainMonitor.DataFetcher.Configuration;
 
 namespace BlockchainMonitor.DataFetcher.Services;
 
+/// <summary>
+/// Background service for continuously fetching blockchain data.
+/// Runs on a configurable interval to fetch data from multiple blockchain networks.
+/// Integrates with metrics collection and handles errors gracefully.
+/// </summary>
 public class BlockchainDataFetchingBackgroundService : BackgroundService
 {
     private readonly IServiceScopeFactory _serviceScopeFactory;

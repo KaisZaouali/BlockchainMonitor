@@ -5,6 +5,11 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace BlockchainMonitor.Infrastructure.Repositories;
 
+/// <summary>
+/// Unit of Work pattern implementation for database transaction management.
+/// Coordinates multiple repositories and ensures data consistency across operations.
+/// Provides transaction scope and rollback capabilities for complex operations.
+/// </summary>
 public class UnitOfWork : IUnitOfWork
 {
     private readonly BlockchainDbContext _context;

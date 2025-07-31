@@ -7,6 +7,11 @@ using System.ComponentModel.DataAnnotations;
 
 namespace BlockchainMonitor.API.Controllers;
 
+/// <summary>
+/// REST API controller for blockchain data operations.
+/// Provides endpoints for retrieving blockchain history, latest data, and health checks.
+/// Handles HTTP requests and responses with proper status codes and validation.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class BlockchainController : ControllerBase

@@ -12,6 +12,11 @@ using Microsoft.Extensions.Options;
 
 namespace BlockchainMonitor.Application.Services;
 
+/// <summary>
+/// Core business logic service for blockchain data operations.
+/// Handles data creation, retrieval, caching, and event publishing.
+/// Provides validation, caching, and metrics tracking for all blockchain operations.
+/// </summary>
 public class BlockchainService : IBlockchainService
 {
     private readonly IBlockchainRepository _blockchainRepository;

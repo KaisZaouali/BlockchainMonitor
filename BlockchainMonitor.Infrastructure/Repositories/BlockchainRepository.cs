@@ -6,9 +6,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlockchainMonitor.Infrastructure.Repositories;
 
+/// <summary>
+/// Repository for blockchain data operations with metrics tracking.
+/// Provides specialized methods for blockchain data queries and operations.
+/// Inherits from base Repository class and adds blockchain-specific functionality.
+/// </summary>
 public class BlockchainRepository : Repository<BlockchainData>, IBlockchainRepository
 {
-    public BlockchainRepository(BlockchainDbContext context, IMetricsService metricsService) : base(context, metricsService)
+    public BlockchainRepository(BlockchainDbContext context, IMetricsService metricsService) 
+        : base(context, metricsService)
     {
     }
 

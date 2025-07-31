@@ -1,5 +1,10 @@
 namespace BlockchainMonitor.Application.Exceptions;
 
+/// <summary>
+/// Base exception class for blockchain-related errors.
+/// Provides a consistent exception type for all blockchain operation failures.
+/// Used for validation errors, data processing errors, and business logic exceptions.
+/// </summary>
 public class BlockchainException : Exception
 {
     public BlockchainException(string message) : base(message)

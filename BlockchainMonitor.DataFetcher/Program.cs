@@ -4,7 +4,6 @@ using BlockchainMonitor.Infrastructure.Interfaces;
 using BlockchainMonitor.DataFetcher.Services;
 using BlockchainMonitor.DataFetcher.Configuration;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 var builder = Host.CreateApplicationBuilder(args);

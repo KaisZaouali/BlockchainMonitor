@@ -5,6 +5,11 @@ using Microsoft.Extensions.Options;
 
 namespace BlockchainMonitor.Infrastructure.Services;
 
+/// <summary>
+/// In-memory caching service for blockchain data.
+/// Provides fast data access with configurable expiration and cache invalidation.
+/// Integrates with metrics collection to track cache hit/miss performance.
+/// </summary>
 public class CacheService : ICacheService
 {
     private readonly IMemoryCache _memoryCache;

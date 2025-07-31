@@ -8,6 +8,11 @@ using Microsoft.Extensions.Options;
 
 namespace BlockchainMonitor.Infrastructure.Services;
 
+/// <summary>
+/// Service for interacting with BlockCypher API.
+/// Handles HTTP requests to external blockchain data providers.
+/// Provides data fetching, error handling, and response parsing for blockchain information.
+/// </summary>
 public class BlockCypherService : IBlockCypherService
 {
     private readonly HttpClient _httpClient;

@@ -5,7 +5,9 @@ using Microsoft.Extensions.Logging;
 namespace BlockchainMonitor.API.Controllers;
 
 /// <summary>
-/// Health check controller for Docker health checks
+/// Health check controller for API monitoring.
+/// Provides simple health status endpoints for load balancers and monitoring systems.
+/// Returns basic application status and availability information.
 /// </summary>
 [ApiController]
 [Route("[controller]")]

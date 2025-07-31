@@ -7,6 +7,11 @@ using Microsoft.Extensions.Options;
 
 namespace BlockchainMonitor.DataFetcher.Services;
 
+/// <summary>
+/// Service for fetching blockchain data from external APIs.
+/// Handles data retrieval from BlockCypher API for multiple blockchain networks.
+/// Processes and stores blockchain data with metrics tracking and error handling.
+/// </summary>
 public class DataFetchingService : IDataFetchingService
 {
     private readonly IBlockCypherService _blockCypherService;

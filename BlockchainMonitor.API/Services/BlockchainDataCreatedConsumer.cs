@@ -1,8 +1,5 @@
 using BlockchainMonitor.Application.Interfaces;
 using BlockchainMonitor.Domain.Events;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;

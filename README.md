@@ -7,37 +7,32 @@ A comprehensive blockchain monitoring system built with .NET 8, featuring real-t
 - **🏗️ Clean Architecture**: Separation of concerns across layers
 - **📊 Real-time Data**: Live blockchain data fetching and monitoring
 - **💾 Intelligent Caching**: Memory-based caching with configurable expiration
-- **🔄 Event-Driven**: RabbitMQ-based event publishing and consumption
+- **🔄 Event-Driven**: RabbitMQ-based event publishing and consumption for cache invalidation across different services
 - **🚪 API Gateway**: YARP-based reverse proxy with load balancing
 - **⚡ Rate Limiting**: Built-in request throttling and protection
-- **🔒 Security**: HTTPS redirection and security headers
 - **📈 Redis-Based Metrics**: Real-time metrics collection with Redis backend
-- **🧪 Comprehensive Testing**: Unit, integration, and E2E tests with high coverage
-- **🐳 Docker Support**: Full containerization with Docker Compose
 - **📊 Real-Time Dashboard**: Beautiful web-based monitoring interface with auto-refresh
+- **🧪 Comprehensive Testing**: Unit, integration, and E2E tests
+- **🐳 Docker Support**: Full containerization with Docker Compose
 
 ## 📋 Prerequisites
 
 - .NET 8.0 SDK
 - Docker and Docker Compose
 - RabbitMQ (included in Docker setup)
+- Redis (included in Docker setup)
 
 ## 🚀 Quick Start
 
 ### 1. Clone the repository
 ```bash
-git clone <repository-url>
+git clone https://github.com/KaisZaouali/BlockchainMonitor
 cd BlockchainMonitor
 ```
 
 ### 2. Run with Docker Compose
 ```bash
-# Development environment
-cd docker
-./start-dev.sh
-
-# Or manually
-docker-compose up --build
+docker-compose -f docker/docker-compose.yml up -d --build
 ```
 
 ### 3. Access the application
@@ -46,27 +41,49 @@ docker-compose up --build
 - **RabbitMQ Management**: http://localhost:15672 (guest/guest)
 - **Real-Time Dashboard**: http://localhost:8080 (Auto-refreshing metrics)
 
-### 4. Health Checks
+### 4. API Endpoints
+- `GET /api/blockchain` - Get all blockchain data
+- `GET /api/blockchain/{blockchainName}` - Get latest blockchain data for a blockchain name
+- `GET /api/blockchain/{blockchainName}/history` - Get blockchain data history for a blockchain name using a default limit of 100.
+- `GET /api/blockchain/latest` - Get latest blockchain data
+- `GET /health` - Health check endpoint
+- `GET /health/detailed` - Health detailed check endpoint
+- `GET /swagger`- Get api documentation
+
+### 5. Gateway Endpoints
+- `GET /health` - Health check endpoint
+- `GET /api/metrics` - Get real-time metrics
+
+### 6. Health Checks
 ```bash
 # Gateway health
 curl -f http://localhost:5003/health
 
-# API health (direct)
+# Api health. Internal in docker-compose, you can run it via dotnet run
 curl -f http://localhost:5001/health
+
+# Api detailed health. Internal in docker-compose, you can run it via dotnet run
+curl -f http://localhost:5001/health/detailed
+
+# Redis health
+docker exec blockchainmonitor-redis redis-cli ping
+
+# RabbitMQ health
+curl -f http://localhost:15672/api/overview
 ```
 
 ## 🏗️ Project Structure
 
 ```
 BlockchainMonitor/
-├── BlockchainMonitor.API/          # Web API layer
-├── BlockchainMonitor.Application/   # Business logic layer
-├── BlockchainMonitor.Domain/       # Domain entities and interfaces
+├── BlockchainMonitor.API/            # Web API layer
+├── BlockchainMonitor.Application/    # Business logic layer
+├── BlockchainMonitor.Domain/         # Domain entities and interfaces
 ├── BlockchainMonitor.Infrastructure/ # Data access and external services
-├── BlockchainMonitor.Gateway/      # API Gateway (YARP)
-├── BlockchainMonitor.DataFetcher/  # Background data fetching service
-├── BlockchainMonitor.Tests.*/      # Test projects
-└── docker/                        # Docker configuration
+├── BlockchainMonitor.Gateway/        # API Gateway (YARP)
+├── BlockchainMonitor.DataFetcher/    # Background data fetching service
+├── BlockchainMonitor.Tests.*/        # Test projects
+└── docker/                           # Docker configuration
 ```
 
 ## 📊 Redis-Based Monitoring
@@ -85,32 +102,12 @@ The application includes comprehensive monitoring with Redis-backed metrics coll
 ### **Real-Time Dashboard**
 Access http://localhost:8080 to see:
 - **Auto-refreshing metrics** every 30 seconds
-- **Beautiful, responsive UI** with gradient design
 - **Real-time data** from Redis-backed metrics
 - **Global metrics** across all service instances
-- **Performance insights** with visual cards and icons
 
 ![Blockchain Monitor Dashboard](docs/images/dashboard.png)
 
 *The dashboard displays real-time metrics including total requests, response times, cache performance, database operations, and blockchain data fetching with a modern purple gradient interface.*
-
-### **Dashboard Features**
-- **Total Requests**: Track API usage across all endpoints
-- **Avg Response Time**: Monitor performance with measurement counts
-- **Data Fetched**: Track blockchain data collection
-- **Cache Hit Rate**: Monitor caching effectiveness
-- **Avg DB Operation**: Database performance metrics
-- **Rate Limited**: Track rate limiting events
-
-### **Console Logging**
-All metrics are also logged to console with emojis for easy identification:
-```
-📊 Request Count: Total requests across all endpoints
-⏱️ Response Time: Average response time with measurement count
-❌ Error Count: Total errors across all endpoints
-💾 Cache Hit: Global cache hit/miss rates
-🏦 Blockchain Data Fetched: Total fetch operations
-```
 
 ## 🧪 Testing
 
@@ -119,114 +116,24 @@ All metrics are also logged to console with emojis for easy identification:
 dotnet test
 ```
 
-### Test Results
-- **Unit Tests**: 12 tests covering domain, services, and repositories
-- **Integration Tests**: 12 tests covering API endpoints and data flow
-- **E2E Tests**: 5 tests covering full application flow with Playwright
+### Tests
+- **Unit Tests**: 49 tests covering domain, services, and repositories
+- **Integration Tests**: 19 tests covering API endpoints and data flow
+- **E2E Tests**: 14 tests covering full application flow with Playwright
 
-### Test Coverage
-The test suite provides comprehensive coverage across all layers:
-- Domain entities and business logic
-- Service layer with caching and metrics
-- Repository layer with database operations
-- API controllers with validation
-- End-to-end scenarios with real HTTP requests
 
-## 🐳 Docker Configuration
-
-### **Development Environment**
-```yaml
-# Ports
-- Gateway: 5003:80, 5004:443
-- API: Internal only (scaled to 2 instances)
-- RabbitMQ: 5672:5672, 15672:15672
-- Redis: 6379:6379 (Metrics storage)
-- Dashboard: 8080:8000 (Monitoring interface)
-- Database: Shared volume (blockchain.db)
-```
-
-### **Production Environment**
-```yaml
-# Ports
-- Gateway: 80:80, 443:443
-- API: Internal only (scaled to 2 instances)
-- RabbitMQ: Internal only
-- Redis: 6379:6379 (Metrics storage)
-- Dashboard: 8080:8000 (Monitoring interface)
-- Database: Persistent volume
-```
-
-## 🔧 Configuration
-
-### **Environment Variables**
-```bash
-# Development
-Database: blockchain.db (shared volume)
-Gateway Ports: 5003:80, 5004:443
-API Ports: Internal only (scaled to 2 instances)
-RabbitMQ Ports: 5672:5672, 15672:15672
-
-# Production
-Database: Persistent volume
-Gateway Ports: 80:80, 443:443
-API Ports: Internal only (scaled to 2 instances)
-RabbitMQ Ports: Internal only
-```
-
-### **API Endpoints**
-- `GET /api/blockchain` - Get blockchain history with pagination
-- `GET /api/blockchain/latest` - Get latest blockchain data
-- `GET /health` - Health check endpoint
 
 ## 📈 Performance Features
 
 - **Load Balancing**: API Gateway distributes requests across multiple API instances
 - **Caching**: Intelligent memory caching with configurable expiration
+- **Cache Invalidation**: Invalidate cache event issued by Datafetcher service and consumed on Api services using RabbitMQ
 - **Rate Limiting**: Built-in request throttling (100 requests/minute)
-- **Metrics Collection**: Real-time performance monitoring
-- **Error Handling**: Comprehensive exception handling and logging
+- **Metrics Collection**: Redis-backed performance monitoring
+- **Auto-scaling**: Multiple API instances for high availability
 
-## 🔒 Security Features
+## 📚 Documentation
 
-- **HTTPS Redirection**: Automatic HTTP to HTTPS redirection
-- **Security Headers**: XSS protection, clickjacking prevention
-- **Rate Limiting**: Protection against abuse
-- **Input Validation**: Comprehensive parameter validation
-- **CORS Configuration**: Cross-origin request handling
-
-## 🚀 Deployment
-
-### **Development**
-```bash
-cd docker
-./start-dev.sh
-```
-
-### **Production**
-```bash
-cd docker
-./start-prod.sh
-```
-
-## 📝 API Documentation
-
-Once the application is running, visit:
-- **Swagger UI**: http://localhost:5003/swagger
-- **API Documentation**: Available through Swagger interface
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
----
-
-**🎉 Ready to monitor blockchain data with style!** The application provides a complete monitoring solution with local metrics, beautiful dashboards, and comprehensive testing.
+- [Docker Configuration](docker/DOCKER.md) - Detailed Docker setup and deployment
+- [API Documentation](http://localhost:5003/swagger) - Interactive API documentation
+- [Metrics Dashboard](http://localhost:8080) - Real-time monitoring interface

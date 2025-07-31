@@ -4,6 +4,11 @@ using BlockchainMonitor.Application.Exceptions;
 
 namespace BlockchainMonitor.API.Middleware;
 
+/// <summary>
+/// Global exception handling middleware for the API.
+/// Catches and processes all unhandled exceptions, providing consistent error responses.
+/// Logs exceptions and returns appropriate HTTP status codes based on exception type.
+/// </summary>
 public class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;
